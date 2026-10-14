@@ -15,4 +15,5 @@
 | K11 | RSK | Liquidación en futuros por apalancamiento excesivo | Apalancamiento máx. en config; distancia SL ≪ distancia a liquidación |
 | K12 | BT | Funding (cada 8 h) ignorado en backtest | Modelar funding en el modelo de costes |
 | K13 | MD | Consumidor lento → backpressure en WS → datos con latencia creciente | ✅ Mitigado (T6): `OrderBookManager.is_tradeable` = SYNCED y latencia ≤ `max_latency_ms`; no se descartan deltas |
-| K14 | MD | URLs WS de futuros cambian (Binance) → sin datos | URLs en `config/settings.py`; T7 verificación; stale timeout reconecta y alerta |
+| K14 | MD | URLs/rutas WS de futuros cambian (Binance) → datos perdidos en silencio | ✅ T7/ADR-0005: rutas `/public`+`/market`; `combined_stream_url` rechaza streams mal enrutados; smoke test detecta contadores a 0 |
+| K15 | MD/EXE | Latencia geográfica alta (~365 ms media, 831 ms máx. desde el equipo local) → señales tardías, libro intermitentemente no operable | T11: medir desde VPS en Tokio (ap-northeast-1); ajustar `max_latency_ms`; no operar live desde el equipo local sin medirlo |

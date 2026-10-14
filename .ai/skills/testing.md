@@ -14,6 +14,7 @@
 - `pytest -q tests/<modulo>` — módulo afectado.
 - `pytest -q` — suite completa antes de cerrar la tarea.
 - `pytest -m testnet` — solo con autorización del usuario.
+- `pytest -m live_readonly` — streams públicos reales (sin claves); smoke largo: `scripts/smoke_market_data.py --seconds 120`.
 
 ## Salida en el change-log
 Comando ejecutado + resultado (n pasados/fallidos). Si se omitió algún test, decirlo.

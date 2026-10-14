@@ -1,7 +1,8 @@
 # Skill: websocket-streams
 
 ## Checklist de un stream robusto
-- [ ] Conexión combinada `/stream?streams=` cuando haya varios símbolos/streams (respetar límite de streams por conexión).
+- [ ] Futuros: una conexión por ruta (`/public` depth/bookTicker, `/market` aggTrade/kline/…), vía `streams.routed_stream_urls` (ADR-0005). Máx. 200 streams por conexión.
+- [ ] `close_timeout` corto (1 s): Binance tarda en responder al cierre.
 - [ ] Ping/pong según docs; timeout de inactividad → reconectar.
 - [ ] Reconexión: backoff exponencial + jitter, tope máx.; reconexión proactiva antes de 24 h.
 - [ ] Al reconectar: resincronizar estado (order book snapshot, últimas velas por REST).

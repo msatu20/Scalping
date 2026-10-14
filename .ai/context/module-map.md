@@ -7,7 +7,9 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | `src/scalping/core/models.py` | ✅ | Enums (`Side`, `ExecutionStyle`, `StrategyType`, `KlineInterval`) y modelos: `Kline`, `PriceLevel`, `OrderBookSnapshot`, `OrderBookDelta`, `AggregatedTrade`, `OrderBookImbalance`, `Signal`, `OrderIntent`, alias `MarketEvent` | orchestrator | CORE |
 | `src/scalping/core/clock.py` | ✅ | `Clock` (Protocol), `SystemClock` (offset servidor), `FixedClock` (tests/backtest) | orchestrator | CORE |
 | `src/scalping/market_data/parser.py` | ✅ | JSON crudo (raw/combinado) → `OrderBookDelta`/`AggregatedTrade`/`Kline`; REST depth → `OrderBookSnapshot`; `ParseError` | market-data | MD |
-| `src/scalping/market_data/streams.py` | ✅ | Nombres de streams y URL combinada (máx. 200) | market-data | MD |
+| `src/scalping/market_data/streams.py` | ✅ | Nombres de streams, `StreamRoute` (`/public` libro, `/market` trades/velas), `route_of`, `routed_stream_urls` (ADR-0005) | market-data | MD |
+| `src/scalping/market_data/feed.py` | ✅ | `MarketDataFeed` (runner: reloj alineado, 2 WS por ruta → cola → `OrderBookManager` / `on_event`), `FeedStats` | market-data | MD |
+| `scripts/smoke_market_data.py` | ✅ | Smoke test real de solo lectura con informe periódico | market-data | MD |
 | `src/scalping/market_data/ws_client.py` | ✅ | `BinanceFuturesWsClient` + `ReconnectPolicy`: backoff+jitter, stale timeout, reconexión 23 h, `on_connected`, cola con backpressure | market-data | MD |
 | `src/scalping/market_data/order_book.py` | ✅ | `LocalOrderBook` (estados UNSYNCED/AWAITING_BRIDGE/SYNCED, `pu`, poda, lecturas solo si SYNCED) + `OrderBookManager` (resync con backoff, `on_connected`, `is_tradeable` por latencia) | market-data | MD |
 | `src/scalping/market_data/rest_snapshot.py` | ✅ | `make_snapshot_fetcher` (aiohttp, `/fapi/v1/depth`) | market-data | MD |
@@ -20,6 +22,7 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | `src/scalping/backtest/` | 🧱 | Replay, sim_broker, costes (fees + funding), métricas | backtesting | BT |
 | `tests/core/test_models.py` | ✅ | Tests de invariantes de modelos | orchestrator | CORE |
 | `tests/config/`, `tests/market_data/` | ✅ | Settings; parser (fixtures), streams, ws_client (servidor WS local), order_book + manager + fetcher REST (servidor aiohttp local) | dueño del módulo | CFG/MD |
+| `tests/integration/` | ✅ | Tests reales `@pytest.mark.live_readonly` (excluidos por defecto) | market-data | MD |
 | `tests/conftest.py` + `tests/fixtures/binance_futures/` | ✅ | Fixture `binance_raw(name)` + payloads reales de ejemplo | market-data | MD |
 | `tests/<modulo>/` | 🧱 | Espejo de `src/`; `tests/fixtures/` para payloads | (dueño del módulo) | — |
 | `pyproject.toml` | ✅ | Dependencias, pytest, ruff, mypy | orchestrator | — |

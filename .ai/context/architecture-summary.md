@@ -35,11 +35,19 @@ data/ (parquet) ──► backtest.replay ──(MarketEvent)──► strategy 
 - Tareas: ws_market, ws_user, strategy_loop, risk_monitor (kill-switch), rate_limiter.
 
 ## Market data (✅ parcial)
-`ws_client` (URL combinada de `streams`) → `parse_message` → `asyncio.Queue[MarketEvent]` → `OrderBookManager.handle` (deltas) / strategy (klines, aggTrades — pendiente).
-- `ws_client(on_connected=manager.on_connected)`: cada (re)conexión resetea y resincroniza los libros.
+`MarketDataFeed` (`feed.py`, ✅):
+```
+/public WS (depth) ──┐                    ┌─► OrderBookManager.handle (deltas)
+                     ├─► asyncio.Queue ───┤
+/market WS (aggTrade,┘                    └─► on_event (klines, aggTrades → strategy)
+          kline)
+```
+- Rutas obligatorias (ADR-0005): legacy `/stream` solo entrega depth.
+- Solo el WS `/public` llama `manager.on_connected` (reset + resync de libros).
+- Reloj alineado con `/fapi/v1/time` al arrancar (latencia = `recv_time − event_time`).
 - Snapshot REST vía `rest_snapshot.make_snapshot_fetcher` (aiohttp).
 - Strategy lee `manager.books[s].imbalance(n)` / `snapshot(n)` solo si `manager.is_tradeable(s)`.
-- Runner que conecte todo: pendiente (T10).
+- Orden entre depth y trades no garantizado (dos conexiones): ordenar por `event_time`.
 
 ## Configuración (✅)
 - `config/settings.py`: `pydantic-settings` + `.env` (gitignored). `TRADING_MODE = paper | testnet | live`; ver ADR-0002.

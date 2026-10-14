@@ -38,8 +38,11 @@ packages = ["src/scalping"]
 testpaths = ["tests"]
 pythonpath = ["src"]
 asyncio_mode = "auto"
-addopts = "-q -m 'not testnet'"
-markers = ["testnet: tests contra Binance testnet (requieren autorización y claves)"]
+addopts = "-q -m 'not testnet and not live_readonly'"
+markers = [
+    "testnet: tests contra Binance testnet (requieren autorización y claves)",
+    "live_readonly: streams públicos reales de Binance, sin claves ni órdenes (requiere internet)",
+]
 
 [tool.ruff]
 line-length = 100

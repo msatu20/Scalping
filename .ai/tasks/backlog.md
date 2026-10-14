@@ -35,7 +35,7 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 ### T7 — Verificar URLs WS de USDⓈ-M Futures
 - **Área/chunk:** CFG/MD · **Prioridad:** alta · **Origen:** ADR-0004 / K14
 - **Descripción:** contrastar `wss://fstream.binance.com/stream` y testnet con la documentación oficial vigente; prueba de humo de solo lectura (marcador `testnet`/manual).
-- **Estado:** pendiente
+- **Estado:** hecho (2026-10-14) — ver change-log t10-t7
 
 ### T8 — Benchmark `json` vs `orjson` en el parser
 - **Área/chunk:** MD · **Prioridad:** baja · **Origen:** ADR-0004
@@ -50,4 +50,9 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 ### T10 — Runner de market data + prueba de humo
 - **Área/chunk:** MD · **Prioridad:** alta · **Origen:** change-log T6
 - **Descripción:** `market_data/feed.py` que conecte settings → streams → `BinanceFuturesWsClient(on_connected=manager.on_connected)` → cola → `OrderBookManager.handle`, con métricas (latencia, gaps, tamaño de cola). Prueba manual de solo lectura contra Binance (junto con T7).
+- **Estado:** hecho (2026-10-14) — ver change-log t10-t7
+
+### T11 — Latencia: medir desde VPS cercano a Binance
+- **Área/chunk:** MD/EXE · **Prioridad:** alta (antes de live) · **Origen:** smoke 2026-10-14 (K15)
+- **Descripción:** latencia event→recepción desde el equipo local: media ~365 ms, máx. 831 ms. Ejecutar `scripts/smoke_market_data.py --seconds 600` desde un VPS en AWS ap-northeast-1 (Tokio) y comparar; fijar `ResyncPolicy.max_latency_ms` según la distribución (p99).
 - **Estado:** pendiente

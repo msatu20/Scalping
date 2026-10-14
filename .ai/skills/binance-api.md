@@ -7,8 +7,8 @@ Integración con la API REST/WS de Binance. Verificar siempre contra la document
 |---|---|---|
 | Spot live | `https://api.binance.com` | `wss://stream.binance.com:9443` |
 | Spot testnet | `https://testnet.binance.vision` | `wss://stream.testnet.binance.vision` |
-| USDⓈ-M Futures | `https://fapi.binance.com` | `wss://fstream.binance.com` |
-| Futures testnet | `https://testnet.binancefuture.com` | (ver docs) |
+| USDⓈ-M Futures | `https://fapi.binance.com` | `wss://fstream.binance.com` + `/public`, `/market`, `/private` (ADR-0005; legacy `/stream` solo entrega depth) |
+| Futures testnet | `https://testnet.binancefuture.com` | `wss://fstream.binancefuture.com` + `/public`, `/market` (verificado 2026-10-14) |
 - URLs en config, nunca hardcodeadas en la lógica.
 
 ## Firma

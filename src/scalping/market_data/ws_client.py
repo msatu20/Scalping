@@ -32,6 +32,7 @@ class ReconnectPolicy:
     stale_timeout_s: float = 10.0  # no frame for this long -> reconnect (R5)
     max_session_s: float = 23 * 3600  # Binance closes connections at 24 h
     open_timeout_s: float = 10.0
+    close_timeout_s: float = 1.0  # do not wait long for the server close handshake
 
     def backoff(self, attempt: int) -> float:
         ceiling = min(self.max_backoff_s, self.initial_backoff_s * 2**attempt)
@@ -63,7 +64,10 @@ class BinanceFuturesWsClient:
         while not self._stopped.is_set():
             try:
                 async with connect(
-                    self._url, open_timeout=self._policy.open_timeout_s, max_size=2**22
+                    self._url,
+                    open_timeout=self._policy.open_timeout_s,
+                    close_timeout=self._policy.close_timeout_s,
+                    max_size=2**22,
                 ) as ws:
                     self._ws = ws
                     log.info("ws connected", extra={"url": self._url})
