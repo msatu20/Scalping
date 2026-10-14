@@ -20,8 +20,24 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 
 ### T4 — Decidir cliente Binance (propio vs `python-binance` vs `ccxt`)
 - **Área/chunk:** EXE/MD · **Prioridad:** media · Resultado → ADR.
-- **Estado:** pendiente — ccxt ya añadido a dependencias por decisión del usuario; falta ADR
+- **Estado:** hecho (2026-10-14) → ADR-0004
 
 ### T5 — Descarga de históricos (klines 1m + aggTrades) a parquet
 - **Área/chunk:** BT · **Prioridad:** media
+- **Estado:** pendiente
+
+### T6 — Order book local
+- **Área/chunk:** MD · **Prioridad:** alta · **Origen:** change-log 2026-10-14
+- **Descripción:** `market_data/order_book.py`: snapshot REST + deltas bufferizados, validación `pu`, resync en `on_connected` o hueco, niveles con qty 0 eliminados, `OrderBookImbalance` top-N.
+- **Criterio de hecho:** tests con secuencias válidas, hueco → resync, reconexión → resync.
+- **Estado:** pendiente
+
+### T7 — Verificar URLs WS de USDⓈ-M Futures
+- **Área/chunk:** CFG/MD · **Prioridad:** alta · **Origen:** ADR-0004 / K14
+- **Descripción:** contrastar `wss://fstream.binance.com/stream` y testnet con la documentación oficial vigente; prueba de humo de solo lectura (marcador `testnet`/manual).
+- **Estado:** pendiente
+
+### T8 — Benchmark `json` vs `orjson` en el parser
+- **Área/chunk:** MD · **Prioridad:** baja · **Origen:** ADR-0004
+- **Descripción:** medir µs/mensaje con fixtures; adoptar `orjson` solo si la mejora es relevante frente a la latencia de red.
 - **Estado:** pendiente

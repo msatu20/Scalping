@@ -34,5 +34,9 @@ data/ (parquet) ──► backtest.replay ──(MarketEvent)──► strategy 
 - Un event loop asyncio; colas acotadas entre etapas; nada bloqueante en handlers.
 - Tareas: ws_market, ws_user, strategy_loop, risk_monitor (kill-switch), rate_limiter.
 
-## Configuración
-- `pydantic-settings` + `.env` (gitignored). `TRADING_MODE = paper | testnet | live`.
+## Market data (✅ parcial)
+`ws_client` (URL combinada de `streams`) → `parse_message` → `asyncio.Queue[MarketEvent]` → (pendiente: `order_book` local + strategy).
+- `on_connected` = punto de resync del libro tras cada (re)conexión.
+
+## Configuración (✅)
+- `config/settings.py`: `pydantic-settings` + `.env` (gitignored). `TRADING_MODE = paper | testnet | live`; ver ADR-0002.

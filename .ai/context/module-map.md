@@ -6,15 +6,20 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 |---|---|---|---|---|
 | `src/scalping/core/models.py` | ✅ | Enums (`Side`, `ExecutionStyle`, `StrategyType`, `KlineInterval`) y modelos: `Kline`, `PriceLevel`, `OrderBookSnapshot`, `OrderBookDelta`, `AggregatedTrade`, `OrderBookImbalance`, `Signal`, `OrderIntent`, alias `MarketEvent` | orchestrator | CORE |
 | `src/scalping/core/clock.py` | ✅ | `Clock` (Protocol), `SystemClock` (offset servidor), `FixedClock` (tests/backtest) | orchestrator | CORE |
-| `src/scalping/market_data/` | 🧱 | WS streams, order book local, reconexión | market-data | MD |
+| `src/scalping/market_data/parser.py` | ✅ | JSON crudo (raw/combinado) → `OrderBookDelta`/`AggregatedTrade`/`Kline`; REST depth → `OrderBookSnapshot`; `ParseError` | market-data | MD |
+| `src/scalping/market_data/streams.py` | ✅ | Nombres de streams y URL combinada (máx. 200) | market-data | MD |
+| `src/scalping/market_data/ws_client.py` | ✅ | `BinanceFuturesWsClient` + `ReconnectPolicy`: backoff+jitter, stale timeout, reconexión 23 h, `on_connected`, cola con backpressure | market-data | MD |
+| `src/scalping/market_data/order_book.py` | 📐 | Libro local (snapshot + deltas, resync) | market-data | MD |
 | `src/scalping/strategy/indicators/` | 🧱 | SMA/EMA/RSI/Bollinger incremental + vectorizado | strategy | STR |
 | `src/scalping/strategy/patterns/` | 🧱 | Patrones de velas, detección de barridos de stops | strategy | STR |
 | `src/scalping/strategy/signals.py` | 📐 | Reglas → `Signal` | strategy | STR |
 | `src/scalping/execution/` | 🧱 | ccxt/REST firmado, órdenes, user data stream, rate limiter, conversión de símbolos ccxt | execution-risk | EXE |
 | `src/scalping/risk/` | 🧱 | Tamaño, SL/TP, apalancamiento, límites, kill-switch | execution-risk | RSK |
-| `src/scalping/config/` | 🧱 | Settings (pydantic + dotenv), modos, secretos vía env | execution-risk | CFG |
+| `src/scalping/config/settings.py` | ✅ | `Settings` (pydantic-settings, inmutable), `TradingMode`, `HARD_MAX_LEVERAGE`=10, URLs por modo, guardas paper/testnet/live | execution-risk | CFG |
 | `src/scalping/backtest/` | 🧱 | Replay, sim_broker, costes (fees + funding), métricas | backtesting | BT |
 | `tests/core/test_models.py` | ✅ | Tests de invariantes de modelos | orchestrator | CORE |
+| `tests/config/`, `tests/market_data/` | ✅ | Settings; parser (fixtures), streams, ws_client (servidor local 127.0.0.1) | dueño del módulo | CFG/MD |
+| `tests/conftest.py` + `tests/fixtures/binance_futures/` | ✅ | Fixture `binance_raw(name)` + payloads reales de ejemplo | market-data | MD |
 | `tests/<modulo>/` | 🧱 | Espejo de `src/`; `tests/fixtures/` para payloads | (dueño del módulo) | — |
 | `pyproject.toml` | ✅ | Dependencias, pytest, ruff, mypy | orchestrator | — |
 | `.env.example` | ✅ | Variables requeridas (sin secretos) | execution-risk | CFG |

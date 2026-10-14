@@ -10,4 +10,8 @@
 | — | 2026-10-13 | Modelos core = dataclasses frozen+slots; pydantic solo en config/bordes | Aceptada |
 | — | 2026-10-13 | Notación de símbolo interna nativa Binance; ccxt solo dentro de `execution` | Aceptada |
 
-Pendientes de decidir: ccxt vs cliente propio para REST (T4; ccxt ya incluido) · almacenamiento de históricos · apalancamiento máx. · despliegue (VPS/región).
+| ADR-0004 | 2026-10-14 | ccxt solo para REST (en `execution`); cliente WS nativo `websockets` para market data | Aceptada |
+| — | 2026-10-14 | Settings con pydantic-settings; live requiere `LIVE_TRADING_CONFIRMED=true`; apalancamiento ≤ 10 | Aceptada |
+| — | 2026-10-14 | Cola WS con backpressure (no descartar deltas de depth) | Aceptada |
+
+Pendientes de decidir: User Data Stream (ccxt.pro vs WS nativo) · almacenamiento de históricos · apalancamiento máx. · despliegue (VPS/región).
