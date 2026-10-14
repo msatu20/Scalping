@@ -31,6 +31,9 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | `src/scalping/backtest/engine.py` | ✅ | `Backtester` (replay → broker → estrategia), sizing fraccional fijo | backtesting | BT |
 | `src/scalping/backtest/metrics.py` | ✅ | `compute_metrics` (R, PF, drawdown, comisiones/bruto) | backtesting | BT |
 | `scripts/run_backtest.py` | ✅ | Backtest MEAN_REVERSION por CLI | backtesting | BT |
+| `src/scalping/backtest/walk_forward.py` | ✅ | Walk-forward (ADR-0008): `make_folds`, `walk_forward`, `Stats` (R, PF, t-stat) | backtesting | BT |
+| `scripts/research_mean_reversion.py` | ✅ | T16: 24 variantes en paralelo + walk-forward + informe en `reports/` | backtesting | BT |
+| `reports/` | ✅ | Informes de investigación (versionados), p. ej. T16 | backtesting | BT |
 | `tests/core/test_models.py` | ✅ | Tests de invariantes de modelos | orchestrator | CORE |
 | `tests/config/`, `tests/market_data/` | ✅ | Settings; parser (fixtures), streams, ws_client (servidor WS local), order_book + manager + fetcher REST (servidor aiohttp local) | dueño del módulo | CFG/MD |
 | `tests/integration/` | ✅ | Tests reales `@pytest.mark.live_readonly` (excluidos por defecto) | market-data | MD |
@@ -38,6 +41,5 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | `tests/<modulo>/` | 🧱 | Espejo de `src/`; `tests/fixtures/` para payloads | (dueño del módulo) | — |
 | `pyproject.toml` | ✅ | Dependencias, pytest, ruff, mypy | orchestrator | — |
 | `.env.example` | ✅ | Variables requeridas (sin secretos) | execution-risk | CFG |
-| `data/futures_um/` | ✅ | Históricos Parquet (gitignored): klines 1m 2026-07-16..10-12, aggTrades 10-11..10-12 | backtesting | BT |
-| `reports/` | 📐 | Informes de backtest | backtesting | BT |
+| `data/futures_um/` | ✅ | Históricos Parquet (gitignored): klines 1m y 5m + fundingRate 2025-10-13..2026-10-12; aggTrades 2026-10-11..12 | backtesting | BT |
 | `.ai/` | ✅ | Framework de IA | orchestrator | — |

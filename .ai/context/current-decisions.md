@@ -20,6 +20,8 @@
 | — | 2026-10-14 | MEAN_REVERSION: setup (cierre fuera de banda + RSI extremo) → trigger re-entrada (CLOSE/TICK); TP = media, SL = extremo ∓ 5 bps; filtros objetivo ≥ 12 bps y R:R ≥ 1. Parámetros por defecto NO validados (K18) | Aceptada (provisional) |
 | ADR-0007 | 2026-10-14 | SimBroker pesimista: maker solo al atravesar, SL al precio del trade que lo cruza ∓ slippage, ambigüedad en vela → SL, funding con mark price | Aceptada |
 | — | 2026-10-14 | MEAN_REVERSION con parámetros por defecto **descartada** (backtest 89 días: −99,9 %, −1,15 R) | Aceptada |
+| ADR-0008 | 2026-10-14 | Investigación: walk-forward pre-registrado (3 m train → 1 m test); criterio a paper: OOS mean R > 0 con t ≥ 2, PF ≥ 1,2, ≥ 200 trades | Aceptada |
+| — | 2026-10-14 | **Familia MEAN_REVERSION (RSI+BB) descartada**: OOS −0,185 R (t −7,9); sin costes ≈ 0 R → sin capacidad predictiva | Aceptada |
 | ADR-0006 | 2026-10-14 | Históricos de data.binance.vision → Parquet diario zstd; float64 round-trip, ms int64; checksum obligatorio; días ausentes = error | Aceptada |
 
 Pendientes de decidir: User Data Stream (ccxt.pro vs WS nativo) · almacenamiento de históricos · apalancamiento máx. · despliegue (VPS/región).

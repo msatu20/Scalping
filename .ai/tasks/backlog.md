@@ -80,9 +80,14 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 ### T16 — Investigación de MEAN_REVERSION con walk-forward
 - **Área/chunk:** STR/BT · **Prioridad:** media · **Origen:** K18
 - **Descripción:** T13 hecho: backtest −99,9 % (stop mediano 12 bps vs 8 bps de coste; sin costes −0,04 R). Separar in-sample / out-of-sample; exigir stop ≥ 3× coste ida y vuelta, entradas maker, filtros de régimen (bandwidth, tendencia EMA), SL por ATR, timeframes 3m/5m. Informe en `reports/`.
-- **Estado:** pendiente
+- **Estado:** hecho (2026-10-14) — familia descartada, ver `reports/2026-10-14-t16-mean-reversion-walk-forward.md`
 
 ### T17 — `Broker` Protocol en core
 - **Área/chunk:** CORE/EXE · **Prioridad:** media · **Origen:** ADR-0007 (resto de T2)
 - **Descripción:** Protocol común (`submit`, `on_event`/actualización de estado, `is_busy`, posiciones, cierre) que implementen `SimBroker` y el futuro broker real ccxt, para que el runner de estrategia sea idéntico en backtest, paper y live.
 - **Estado:** pendiente
+
+### T18 — Siguiente hipótesis de estrategia (información distinta a RSI/BB)
+- **Área/chunk:** STR/BT/MD · **Prioridad:** alta · **Origen:** T16
+- **Descripción:** elegir y pre-registrar (ADR-0008) una hipótesis basada en microestructura: (a) `STOP_HUNT_REBOUND` / agresión con aggTrades (requiere ampliar aggTrades a ≥ 6–12 meses, ~5–15 GB), o (b) order-book imbalance / `ORDER_FLOW_SQUEEZE` (requiere T14: grabar depth live semanas antes de poder backtestear).
+- **Estado:** pendiente (decisión del usuario)

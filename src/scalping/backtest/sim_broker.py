@@ -39,6 +39,7 @@ from scalping.core.models import (
     AggregatedTrade,
     ExecutionStyle,
     Kline,
+    KlineInterval,
     MarketEvent,
     OrderIntent,
     Side,
@@ -146,8 +147,10 @@ class SimBroker:
         price_source: PriceSource = PriceSource.TRADES,
         funding: Mapping[str, FundingSchedule] | None = None,
         initial_equity: Decimal = Decimal("10000"),
+        kline_interval: KlineInterval = KlineInterval.M1,
     ) -> None:
         self.costs = costs or CostModel()
+        self.kline_interval = kline_interval  # price path; other intervals are ignored
         self.price_source = price_source
         self.initial_equity = initial_equity
         self._funding = dict(funding or {})
@@ -193,7 +196,10 @@ class SimBroker:
             if self.price_source is PriceSource.TRADES:
                 self._on_price(event.symbol, event.trade_time, event.price)
         elif (
-            isinstance(event, Kline) and self.price_source is PriceSource.KLINES and event.is_closed
+            isinstance(event, Kline)
+            and self.price_source is PriceSource.KLINES
+            and event.is_closed
+            and event.interval is self.kline_interval
         ):
             self._on_candle(event)
 

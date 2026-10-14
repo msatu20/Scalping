@@ -214,3 +214,32 @@ def test_runs_on_replay_engine_with_same_result(tmp_path: Path) -> None:
         (s.side, s.created_at, s.reference_price, s.take_profit) for s in direct
     ]
     assert all(a.created_at < b.created_at for a, b in itertools.pairwise(via_replay))
+
+
+# ------------------------------------------------------------------ T16 extensions
+
+
+def test_min_stop_widens_the_structural_stop() -> None:
+    strategy, clock = make(MeanReversionParams(min_reward_risk=0.0, min_stop_bps=300))
+    (s,) = run(strategy, clock, scenario([*BASE, *DROP, REENTRY]))
+    assert float(s.stop_loss) == pytest.approx(99.6 * (1 - 0.03))  # 3 % > structural 1.7 %
+    assert s.features["reward_risk"] == pytest.approx(
+        (s.features["bb_middle"] - 99.6) / (99.6 * 0.03)
+    )
+
+
+def test_trend_filter_rejects_signals_in_strong_trends() -> None:
+    params = MeanReversionParams(
+        min_reward_risk=0.0, max_trend_bps=0.01, trend_fast=2, trend_slow=5
+    )
+    strategy, clock = make(params)
+    assert run(strategy, clock, scenario([*BASE, *DROP, REENTRY])) == []
+    assert strategy.stats(SYM)["rejected_trend"] == 1
+
+
+def test_trend_filter_allows_ranging_market() -> None:
+    params = MeanReversionParams(
+        min_reward_risk=0.0, max_trend_bps=10_000, trend_fast=2, trend_slow=5
+    )
+    strategy, clock = make(params)
+    assert len(run(strategy, clock, scenario([*BASE, *DROP, REENTRY]))) == 1

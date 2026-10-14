@@ -211,3 +211,12 @@ def test_klines_maker_entry_needs_trade_through() -> None:
     assert not broker.has_position(SYM)
     feed(broker, candle(2, "99.9", "100", "99.4", "99.8"))
     assert broker._positions[SYM].entry.price == D("99.5")
+
+
+def test_klines_ignores_other_intervals() -> None:
+    broker = kline_broker()
+    broker.submit(intent(created_at=59_999), now=59_999)
+    m5 = Kline(SYM, KlineInterval.M5, 60_000, 359_999, D(100), D(100), D(100), D(100), D(1),
+               D(100), 1, D(0), True, 359_999, 359_999)  # fmt: skip
+    feed(broker, m5)
+    assert not broker.has_position(SYM)  # only the 1m price path fills orders

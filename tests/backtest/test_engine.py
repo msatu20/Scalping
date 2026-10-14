@@ -114,3 +114,30 @@ def test_metrics() -> None:
 def test_metrics_empty() -> None:
     m = compute_metrics([], D("1000"))
     assert m.trades == 0 and m.net_pnl == 0 and m.profit_factor == 0.0
+
+
+def test_maker_entry_offset_and_non_compounding_sizing(tmp_path: Path) -> None:
+    from scalping.core import ExecutionStyle
+
+    store = HistoricalStore(tmp_path)
+    write_klines(store, CLOSES)
+    sizing = SizingParams(compounding=False)
+    result = Backtester(store, [SYM], DAY, DAY, factory, entry_style=ExecutionStyle.MAKER,
+                        maker_offset_bps=D(2), sizing=sizing).run()  # fmt: skip
+    (signal,) = result.signals
+    assert result.broker_stats["submitted"] == 1
+    # limit 2 bps below the reference; the next candle's low (99.75) never trades through it
+    assert result.trades == [] and result.broker_stats["expired"] == 1
+    assert signal.reference_price == D("99.6")
+
+
+def test_maker_offset_beyond_tight_stop_is_skipped(tmp_path: Path) -> None:
+    from scalping.core import ExecutionStyle
+
+    store = HistoricalStore(tmp_path)
+    write_klines(store, CLOSES)
+    # 5000 bps offset puts the buy limit far below the stop -> no order, counted skip
+    result = Backtester(store, [SYM], DAY, DAY, factory, entry_style=ExecutionStyle.MAKER,
+                        maker_offset_bps=D(5000)).run()  # fmt: skip
+    assert result.skipped == {"entry_outside_brackets": 1}
+    assert "submitted" not in result.broker_stats

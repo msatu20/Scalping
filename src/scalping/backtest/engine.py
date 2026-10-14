@@ -18,7 +18,14 @@ from scalping.backtest.replay import ReplayFeed
 from scalping.backtest.sim_broker import ClosedTrade, CostModel, PriceSource, SimBroker
 from scalping.backtest.store import HistoricalStore
 from scalping.core.clock import Clock
-from scalping.core.models import ExecutionStyle, MarketEvent, OrderIntent, Signal
+from scalping.core.models import (
+    ExecutionStyle,
+    KlineInterval,
+    MarketEvent,
+    OrderIntent,
+    Side,
+    Signal,
+)
 from scalping.strategy.signals.base import SignalGenerator, SignalHandler
 
 type StrategyFactory = Callable[[Clock, SignalHandler], SignalGenerator]
@@ -30,6 +37,7 @@ class SizingParams:
     risk_per_trade: Decimal = Decimal("0.005")  # 0.5 % of equity lost if the stop is hit
     max_leverage: int = 3
     qty_step: Decimal = Decimal("0.001")  # BTCUSDT/ETHUSDT stepSize; real filters: T15
+    compounding: bool = True  # False: size from initial equity (research in R units)
 
 
 def position_size(
@@ -53,6 +61,14 @@ class BacktestResult:
     skipped: dict[str, int] = field(default_factory=dict)
 
 
+def _between(a: Decimal, x: Decimal, b: Decimal) -> bool:
+    return min(a, b) < x < max(a, b)
+
+
+def _interval_order(interval: KlineInterval) -> int:
+    return list(KlineInterval).index(interval)
+
+
 class Backtester:
     def __init__(
         self,
@@ -67,6 +83,8 @@ class Backtester:
         price_source: PriceSource = PriceSource.KLINES,
         entry_style: ExecutionStyle = ExecutionStyle.TAKER,
         funding: Mapping[str, FundingSchedule] | None = None,
+        strategy_interval: KlineInterval = KlineInterval.M1,
+        maker_offset_bps: Decimal = Decimal(0),
     ) -> None:
         self._store = store
         self._symbols = list(symbols)
@@ -77,11 +95,15 @@ class Backtester:
         self._price_source = price_source
         self._entry_style = entry_style
         self._funding = funding
+        self._strategy_interval = strategy_interval
+        self._maker_offset = maker_offset_bps / Decimal(10_000)
 
     def run(self) -> BacktestResult:
         feed = ReplayFeed(
             self._store, self._symbols, self._start, self._end,
             agg_trades=self._price_source is PriceSource.TRADES,
+            # 1m always feeds the broker's price path; the strategy may use a coarser one.
+            intervals=sorted({KlineInterval.M1, self._strategy_interval}, key=_interval_order),
         )  # fmt: skip
         broker = SimBroker(self._costs, self._price_source, self._funding,
                            self._sizing.initial_equity)  # fmt: skip
@@ -95,11 +117,19 @@ class Backtester:
             signals.append(signal)
             if broker.is_busy(signal.symbol):
                 return skip("busy")
-            qty = position_size(signal, signal.reference_price, broker.equity, self._sizing)
+            entry = self._entry_price(signal)
+            if not _between(signal.stop_loss, entry, signal.take_profit):
+                return skip("entry_outside_brackets")  # maker offset beyond a tight stop
+            equity = broker.equity if self._sizing.compounding else self._sizing.initial_equity
+            qty = position_size(signal, entry, equity, self._sizing)
             if qty <= 0:
                 return skip("size_zero")
             intent = OrderIntent.from_signal(
-                signal, quantity=qty, execution=self._entry_style, created_at=feed.clock.now_ms()
+                signal,
+                quantity=qty,
+                execution=self._entry_style,
+                created_at=feed.clock.now_ms(),
+                entry_price=entry,
             )
             broker.submit(intent, feed.clock.now_ms(), expires_at=signal.expires_at)
             return None
@@ -120,3 +150,10 @@ class Backtester:
             events=events,
             skipped=skipped,
         )
+
+    def _entry_price(self, signal: Signal) -> Decimal:
+        """Taker: the signal price. Maker: a limit ``maker_offset_bps`` better than it."""
+        if self._entry_style is ExecutionStyle.TAKER or not self._maker_offset:
+            return signal.reference_price
+        sign = -1 if signal.side is Side.BUY else 1
+        return signal.reference_price * (1 + sign * self._maker_offset)

@@ -11,8 +11,11 @@ Long (short is symmetric):
    - ``TriggerMode.TICK``: evaluated on every aggTrade with ``peek()`` (hypothetical
      candle close at the trade price); at most one signal per candle.
 3. **Levels**: take profit = middle band (the mean); stop loss = setup extreme minus
-   ``sl_buffer_bps``. Rejected unless the target clears ``min_target_bps`` (fees, K8)
-   and reward/risk >= ``min_reward_risk``.
+   ``sl_buffer_bps``, widened to at least ``min_stop_bps`` from the entry (stops tighter
+   than a few round-trip costs make fees dominate, K8). Rejected unless the target clears
+   ``min_target_bps`` (fees, K8) and reward/risk >= ``min_reward_risk``.
+   Optional regime filter: skip when the trend is strong, i.e.
+   ``|EMA(trend_fast) - EMA(trend_slow)| / price > max_trend_bps``.
 4. **Output**: ``Signal`` with ``created_at`` from the injected clock, ``expires_at =
    created_at + expiry_ms``, ``confidence`` in [0, 1] (heuristic: half RSI extremity,
    half band penetration) and the indicator ``features``.
@@ -35,7 +38,7 @@ from scalping.core.models import (
     Signal,
     StrategyType,
 )
-from scalping.strategy.indicators import RSI, BollingerBands, BollingerValue
+from scalping.strategy.indicators import EMA, RSI, BollingerBands, BollingerValue
 from scalping.strategy.signals.base import SignalHandler
 
 _INTERVAL_MS = {KlineInterval.M1: 60_000, KlineInterval.M3: 180_000, KlineInterval.M5: 300_000}
@@ -62,6 +65,10 @@ class MeanReversionParams:
     min_reward_risk: float = 1.0
     expiry_ms: int = 60_000
     trigger: TriggerMode = TriggerMode.CLOSE
+    min_stop_bps: float = 0.0  # 0 = structural stop only
+    max_trend_bps: float | None = None  # None = no regime filter
+    trend_fast: int = 50
+    trend_slow: int = 200
 
     def __post_init__(self) -> None:
         if not 0 < self.rsi_oversold < 50 < self.rsi_overbought < 100:
@@ -70,6 +77,10 @@ class MeanReversionParams:
             raise ValueError("max_setup_bars and expiry_ms must be positive")
         if self.sl_buffer_bps < 0 or self.min_target_bps < 0 or self.min_reward_risk < 0:
             raise ValueError("buffers and filters must be >= 0")
+        if self.min_stop_bps < 0 or (self.max_trend_bps is not None and self.max_trend_bps <= 0):
+            raise ValueError("min_stop_bps must be >= 0 and max_trend_bps > 0")
+        if not 0 < self.trend_fast < self.trend_slow:
+            raise ValueError("require 0 < trend_fast < trend_slow")
 
 
 @dataclass(slots=True)
@@ -85,6 +96,8 @@ class _SymbolState:
     symbol: str
     rsi: RSI
     bands: BollingerBands
+    ema_fast: EMA
+    ema_slow: EMA
     setup: _Setup | None = None
     last_rsi: float | None = None
     last_bands: BollingerValue | None = None
@@ -109,6 +122,8 @@ class MeanReversionStrategy:
                 s,
                 RSI(self.params.rsi_period),
                 BollingerBands(self.params.bb_period, self.params.bb_std),
+                EMA(self.params.trend_fast),
+                EMA(self.params.trend_slow),
             )
             for s in symbols
         }
@@ -137,6 +152,8 @@ class MeanReversionStrategy:
         close, low, high = float(k.close), float(k.low), float(k.high)
         rsi = st.rsi.update(close)
         bands = st.bands.update(close)
+        st.ema_fast.update(close)
+        st.ema_slow.update(close)
         st.last_rsi, st.last_bands = rsi, bands
         if rsi is None or bands is None:
             return None
@@ -225,8 +242,19 @@ class MeanReversionStrategy:
             half_width = bands.upper - bands.middle
             penetration = (setup.extreme_price - bands.upper) / half_width if half_width else 0.0
 
+        min_stop = price * p.min_stop_bps / 10_000
+        if risk < min_stop:
+            stop = price - min_stop if setup.side is Side.BUY else price + min_stop
+            risk = min_stop
+
         if reward <= 0 or risk <= 0:
             return self._reject(st, "levels")
+        if p.max_trend_bps is not None:
+            fast, slow = st.ema_fast.value, st.ema_slow.value
+            if fast is None or slow is None:
+                return self._reject(st, "trend_warmup")
+            if abs(fast - slow) / price * 10_000 > p.max_trend_bps:
+                return self._reject(st, "trend")
         if reward / price * 10_000 < p.min_target_bps:
             return self._reject(st, "target_below_fees")
         if reward / risk < p.min_reward_risk:

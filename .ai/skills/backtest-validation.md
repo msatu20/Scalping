@@ -4,7 +4,7 @@
 0. Datos: `scripts/download_history.py --days N` (o `--start/--end`); cargar con `HistoricalStore.load` (falla si faltan días) y revisar `find_kline_gaps` (ADR-0006).
    Ejecutar la estrategia con `ReplayFeed(store, symbols, start, end).replay(on_event)` usando el `feed.clock` como reloj: mismo código que en live, sin batch paralelo.
    Backtest con costes: `Backtester` + `SimBroker` (ADR-0007) o `scripts/run_backtest.py`; funding: `download_history.py --funding`. Comparar siempre contra un control sin costes y revisar `fee_to_gross_ratio`.
-1. Fijar: símbolo(s), timeframe, rango in-sample y out-of-sample, parámetros, commit.
+1. Pre-registrar (ADR-0008): hipótesis, rejilla pequeña, métrica de selección y criterios ANTES de ejecutar. Walk-forward con `backtest/walk_forward.py` (plantilla: `scripts/research_mean_reversion.py`).
 2. Costes realistas: comisión maker/taker del tier actual, slippage (ticks), latencia, probabilidad de fill de limit.
 3. Ejecutar baseline (código actual) y candidato (cambio) con los mismos datos.
 4. Comparar métricas netas de costes.
