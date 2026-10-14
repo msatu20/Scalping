@@ -15,5 +15,6 @@
 | — | 2026-10-14 | Cola WS con backpressure (no descartar deltas de depth) | Aceptada |
 | — | 2026-10-14 | Resync solo por hueco/reconexión; latencia alta → libro no operable (no resync) | Aceptada |
 | ADR-0005 | 2026-10-14 | WS enrutado: `/public` (depth) y `/market` (aggTrade, kline); una conexión por ruta | Aceptada |
+| ADR-0006 | 2026-10-14 | Históricos de data.binance.vision → Parquet diario zstd; float64 round-trip, ms int64; checksum obligatorio; días ausentes = error | Aceptada |
 
 Pendientes de decidir: User Data Stream (ccxt.pro vs WS nativo) · almacenamiento de históricos · apalancamiento máx. · despliegue (VPS/región).

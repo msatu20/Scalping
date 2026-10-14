@@ -19,7 +19,10 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | `src/scalping/execution/` | 🧱 | ccxt/REST firmado, órdenes, user data stream, rate limiter, conversión de símbolos ccxt | execution-risk | EXE |
 | `src/scalping/risk/` | 🧱 | Tamaño, SL/TP, apalancamiento, límites, kill-switch | execution-risk | RSK |
 | `src/scalping/config/settings.py` | ✅ | `Settings` (pydantic-settings, inmutable), `TradingMode`, `HARD_MAX_LEVERAGE`=10, URLs por modo, guardas paper/testnet/live | execution-risk | CFG |
-| `src/scalping/backtest/` | 🧱 | Replay, sim_broker, costes (fees + funding), métricas | backtesting | BT |
+| `src/scalping/backtest/store.py` | ✅ | `HistoricalStore` (Parquet diario, escritura atómica, `load` falla si faltan días), `find_kline_gaps` | backtesting | BT |
+| `src/scalping/backtest/binance_vision.py` | ✅ | `BinanceVisionDownloader` (checksum SHA-256, reintentos, idempotente), `parse_daily_zip` | backtesting | BT |
+| `scripts/download_history.py` | ✅ | CLI de descarga (`--days`, `--start/--end`, `--kinds`) | backtesting | BT |
+| `src/scalping/backtest/` (replay, sim_broker, métricas) | 📐 | Replay, sim_broker, costes (fees + funding), métricas | backtesting | BT |
 | `tests/core/test_models.py` | ✅ | Tests de invariantes de modelos | orchestrator | CORE |
 | `tests/config/`, `tests/market_data/` | ✅ | Settings; parser (fixtures), streams, ws_client (servidor WS local), order_book + manager + fetcher REST (servidor aiohttp local) | dueño del módulo | CFG/MD |
 | `tests/integration/` | ✅ | Tests reales `@pytest.mark.live_readonly` (excluidos por defecto) | market-data | MD |
@@ -27,5 +30,6 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | `tests/<modulo>/` | 🧱 | Espejo de `src/`; `tests/fixtures/` para payloads | (dueño del módulo) | — |
 | `pyproject.toml` | ✅ | Dependencias, pytest, ruff, mypy | orchestrator | — |
 | `.env.example` | ✅ | Variables requeridas (sin secretos) | execution-risk | CFG |
-| `data/`, `reports/` | 📐 | Históricos (gitignored) e informes | backtesting | BT |
+| `data/futures_um/` | ✅ | Históricos Parquet (gitignored): klines 1m 2026-07-16..10-12, aggTrades 10-11..10-12 | backtesting | BT |
+| `reports/` | 📐 | Informes de backtest | backtesting | BT |
 | `.ai/` | ✅ | Framework de IA | orchestrator | — |

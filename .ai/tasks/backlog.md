@@ -24,7 +24,7 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 
 ### T5 — Descarga de históricos (klines 1m + aggTrades) a parquet
 - **Área/chunk:** BT · **Prioridad:** media
-- **Estado:** pendiente
+- **Estado:** hecho (2026-10-14) → ADR-0006, `backtest/store.py`, `backtest/binance_vision.py`
 
 ### T6 — Order book local
 - **Área/chunk:** MD · **Prioridad:** alta · **Origen:** change-log 2026-10-14
@@ -55,4 +55,9 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 ### T11 — Latencia: medir desde VPS cercano a Binance
 - **Área/chunk:** MD/EXE · **Prioridad:** alta (antes de live) · **Origen:** smoke 2026-10-14 (K15)
 - **Descripción:** latencia event→recepción desde el equipo local: media ~365 ms, máx. 831 ms. Ejecutar `scripts/smoke_market_data.py --seconds 600` desde un VPS en AWS ap-northeast-1 (Tokio) y comparar; fijar `ResyncPolicy.max_latency_ms` según la distribución (p99).
+- **Estado:** pendiente
+
+### T12 — Replay de backtest (Parquet → eventos core)
+- **Área/chunk:** BT · **Prioridad:** alta · **Origen:** change-log T5
+- **Descripción:** `backtest/replay.py`: lee `HistoricalStore` por rango y emite `Kline` / `AggregatedTrade` (core) fusionados por tiempo, sin look-ahead (kline solo al cierre). Misma interfaz que el feed live (`on_event`) para paridad strategy live/backtest.
 - **Estado:** pendiente

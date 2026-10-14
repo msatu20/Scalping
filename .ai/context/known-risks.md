@@ -16,4 +16,5 @@
 | K12 | BT | Funding (cada 8 h) ignorado en backtest | Modelar funding en el modelo de costes |
 | K13 | MD | Consumidor lento → backpressure en WS → datos con latencia creciente | ✅ Mitigado (T6): `OrderBookManager.is_tradeable` = SYNCED y latencia ≤ `max_latency_ms`; no se descartan deltas |
 | K14 | MD | URLs/rutas WS de futuros cambian (Binance) → datos perdidos en silencio | ✅ T7/ADR-0005: rutas `/public`+`/market`; `combined_stream_url` rechaza streams mal enrutados; smoke test detecta contadores a 0 |
+| K16 | BT/STR | Trade IDs de futuros no contiguos → `trade_count` (last−first+1) inexacto; volumen por minuto desde aggTrades difiere de klines en fronteras | Klines = verdad para volumen por vela; no usar `trade_count` como métrica exacta (ADR-0006) |
 | K15 | MD/EXE | Latencia geográfica alta (~365 ms media, 831 ms máx. desde el equipo local) → señales tardías, libro intermitentemente no operable | T11: medir desde VPS en Tokio (ap-northeast-1); ajustar `max_latency_ms`; no operar live desde el equipo local sin medirlo |

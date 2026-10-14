@@ -225,6 +225,7 @@ class AggregatedTrade:
 
     @property
     def trade_count(self) -> int:
+        """Upper bound only: futures trade IDs are not contiguous (ADR-0006, K16)."""
         return self.last_trade_id - self.first_trade_id + 1
 
 

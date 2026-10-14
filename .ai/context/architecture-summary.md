@@ -13,8 +13,9 @@ Binance REST ◄── execution ◄──(OrderIntent aprobado)── risk ◄�
 ```
 
 ## Flujo backtest
+Datos (✅, ADR-0006): `scripts/download_history.py` → `BinanceVisionDownloader` (checksum) → `HistoricalStore` → `data/futures_um/…/<día>.parquet`; lectura con `HistoricalStore.load(kind, symbol, start, end)`.
 ```
-data/ (parquet) ──► backtest.replay ──(MarketEvent)──► strategy ──► risk ──► backtest.sim_broker
+data/ (parquet) ──► backtest.replay (📐 T12) ──(MarketEvent)──► strategy ──► risk ──► backtest.sim_broker
                                                                               (comisión, slippage, fills)
                                                                     ──► metrics ──► reports/
 ```
