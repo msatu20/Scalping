@@ -11,6 +11,7 @@ from __future__ import annotations
 import itertools
 import re
 import uuid
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import StrEnum
@@ -271,7 +272,12 @@ type MarketEvent = Kline | OrderBookSnapshot | OrderBookDelta | AggregatedTrade
 
 @dataclass(frozen=True, slots=True)
 class Signal:
-    """Strategy output. Proposes protective levels; risk decides size and final validation."""
+    """Strategy output. Proposes protective levels; risk decides size and final validation.
+
+    Invalidation: price (``stop_loss``) and time (``expires_at``: do not act on the signal
+    at or after this ms). ``confidence`` is the signal strength in [0, 1]; ``features``
+    holds the indicator values that produced it (for audit and analysis).
+    """
 
     symbol: str
     side: Side
@@ -282,12 +288,19 @@ class Signal:
     created_at: int
     reason: str
     confidence: float | None = None
+    expires_at: int | None = None
+    features: Mapping[str, float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         _require_symbol(self.symbol)
         _require_brackets(self.side, self.reference_price, self.stop_loss, self.take_profit)
         if self.confidence is not None and not 0.0 <= self.confidence <= 1.0:
             raise ValueError("confidence must be within [0, 1]")
+        if self.expires_at is not None and self.expires_at <= self.created_at:
+            raise ValueError("expires_at must be after created_at")
+
+    def is_expired(self, now_ms: int) -> bool:
+        return self.expires_at is not None and now_ms >= self.expires_at
 
     @property
     def reward_risk(self) -> Decimal:

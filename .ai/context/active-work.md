@@ -1,7 +1,7 @@
 # Active work
 
 ## En curso
-- (ninguna) — T12 sin commit todavía.
+- (ninguna) — señal MEAN_REVERSION sin commit todavía.
 
 ## Entorno
 - Python 3.12.10 en `.venv` (`.venv/Scripts/python.exe`). Python del sistema = 3.7: usar siempre el del venv.
@@ -14,13 +14,14 @@
 - klines 1m BTCUSDT/ETHUSDT: 2026-07-16..2026-10-12 · aggTrades: 2026-10-11..2026-10-12
 
 ## Siguiente
-1. `strategy/signals.py`: primera señal `MEAN_REVERSION` (RSI + Bollinger) consumiendo eventos vía `on_event`.
-2. T13 — `sim_broker` (fills, comisiones, slippage, funding) → primer backtest de punta a punta.
+1. T13 — `sim_broker` (fills maker/taker, comisiones, slippage, SL/TP intra-vela, funding) → primer backtest real de MEAN_REVERSION.
+2. T16 — Walk-forward de MEAN_REVERSION (diagnóstico preliminar desfavorable, K18).
 3. T9 — Gestor central de rate limits / ban 418.
 4. T11 — Medir latencia desde VPS en Tokio antes de cualquier operativa live (K15).
 
 ## Hecho
-- 2026-10-14 · T12 replay de backtest: interfaz común live/backtest, reloj al consumir, 3M eventos reales sin violaciones (`change-log/2026-10-14-t12-backtest-replay.md`).
+- 2026-10-14 · Señal MEAN_REVERSION (RSI+BB, CLOSE/TICK) + replay 89 días: ~15 señales/día, 32 % TP primero (`change-log/2026-10-14-mean-reversion-signal.md`).
+- 2026-10-14 · T12 replay de backtest — commit `fcb8fa6`.
 - 2026-10-14 · Indicadores SMA/EMA/RSI/Bollinger bit-idénticos — commit `fe5c295`.
 - 2026-10-14 · T5: históricos a Parquet + validación (ADR-0006) — commit `2b41f28`.
 - 2026-10-14 · T10 + T7: `MarketDataFeed`, WS enrutado (ADR-0005), smoke real 120 s con 0 gaps — commit `0310eb1`.

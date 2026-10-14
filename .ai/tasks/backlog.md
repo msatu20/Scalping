@@ -71,3 +71,13 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 - **Área/chunk:** MD/BT · **Prioridad:** media · **Origen:** K17
 - **Descripción:** grabar snapshots + deltas del feed `/public` (o top-N del libro cada X ms) para poder backtestear estrategias de order book.
 - **Estado:** pendiente
+
+### T15 — Redondeo a filtros del símbolo (tickSize / stepSize / minNotional)
+- **Área/chunk:** EXE · **Prioridad:** alta (antes de órdenes) · **Origen:** change-log señal MEAN_REVERSION
+- **Descripción:** cargar `exchangeInfo` de USDⓈ-M y redondear precios de `OrderIntent` a `tickSize` (SL/TP hacia el lado seguro) y cantidades a `stepSize`; validar `minNotional`. Las `Signal` llevan precios sin redondear (p. ej. `81778.19045000001`).
+- **Estado:** pendiente
+
+### T16 — Investigación de MEAN_REVERSION con walk-forward
+- **Área/chunk:** STR/BT · **Prioridad:** media · **Origen:** K18
+- **Descripción:** solo tras T13. Separar in-sample / out-of-sample; evaluar filtros de régimen (bandwidth, tendencia EMA), SL por ATR, TP parcial, horario. Informe en `reports/`.
+- **Estado:** pendiente

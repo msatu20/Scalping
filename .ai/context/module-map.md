@@ -15,7 +15,9 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | `src/scalping/market_data/rest_snapshot.py` | ✅ | `make_snapshot_fetcher` (aiohttp, `/fapi/v1/depth`) | market-data | MD |
 | `src/scalping/strategy/indicators/` | ✅ | `sma`/`SMA`, `ema`/`EMA`, `rsi`/`RSI`, `bollinger`/`BollingerBands`: batch (numpy) + incremental (`update`/`peek`), bit-idénticos (`_core.py`) | strategy | STR |
 | `src/scalping/strategy/patterns/` | 🧱 | Patrones de velas, detección de barridos de stops | strategy | STR |
-| `src/scalping/strategy/signals.py` | 📐 | Reglas → `Signal` | strategy | STR |
+| `src/scalping/strategy/signals/base.py` | ✅ | Protocol `SignalGenerator.on_event(event) -> Signal \| None` | strategy | STR |
+| `src/scalping/strategy/signals/mean_reversion.py` | ✅ | `MeanReversionStrategy` (RSI+BB, setup → re-entrada, modos CLOSE/TICK, filtros fees y R:R) | strategy | STR |
+| `scripts/run_signals.py` | ✅ | Señales sobre replay + diagnóstico preliminar de primer toque | strategy | STR |
 | `src/scalping/execution/` | 🧱 | ccxt/REST firmado, órdenes, user data stream, rate limiter, conversión de símbolos ccxt | execution-risk | EXE |
 | `src/scalping/risk/` | 🧱 | Tamaño, SL/TP, apalancamiento, límites, kill-switch | execution-risk | RSK |
 | `src/scalping/config/settings.py` | ✅ | `Settings` (pydantic-settings, inmutable), `TradingMode`, `HARD_MAX_LEVERAGE`=10, URLs por modo, guardas paper/testnet/live | execution-risk | CFG |

@@ -25,12 +25,16 @@ data/ (parquet) ──► backtest.replay (✅) ──(MarketEvent)──► str
 ```
 - `strategy` y `risk` son el MISMO código en live y backtest; solo cambian la fuente de eventos y el broker.
 
+## Strategy (✅ parcial)
+`feed.on_event` → `SignalGenerator.on_event(event)` (p. ej. `MeanReversionStrategy(symbols, feed.clock, params, on_signal=...)`) → `Signal` → (pendiente: risk → `OrderIntent` → sim_broker/execution).
+- Tiempo solo desde el `Clock` inyectado (`created_at`, `expires_at`).
+
 ## Contratos (`src/scalping/core/models.py` — ✅ implementados)
 | Contrato | Productor → Consumidor | Contenido / invariantes |
 |---|---|---|
 | `MarketEvent` = `Kline \| OrderBookSnapshot \| OrderBookDelta \| AggregatedTrade` | market_data/replay → strategy | ts ms; precios `Decimal` |
 | `OrderBookImbalance` | strategy (derivado de snapshot) | `value` ∈ [-1, 1], top-N niveles |
-| `Signal` | strategy → risk | `StrategyType`, precio ref., SL/TP validados por lado, `reward_risk` |
+| `Signal` | strategy → risk | `StrategyType`, precio ref., SL/TP validados por lado, `confidence`, `expires_at` (`is_expired`), `features`, `reward_risk` |
 | `OrderIntent` | risk → execution/sim_broker | `ExecutionStyle`, qty, entry, **SL+TP obligatorios**, `client_order_id` Binance-válido |
 | `Clock` (`core/clock.py`) | todos | `now_ms()`; `FixedClock` en tests/backtest |
 | `Broker` (protocolo) | execution / sim_broker | PROPUESTA: `place`, `cancel`, `get_order`, `positions` |

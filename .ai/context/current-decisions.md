@@ -17,6 +17,7 @@
 | ADR-0005 | 2026-10-14 | WS enrutado: `/public` (depth) y `/market` (aggTrade, kline); una conexión por ruta | Aceptada |
 | — | 2026-10-14 | Indicadores: paridad batch/incremental **bit a bit** (sumas izquierda→derecha, funciones de paso compartidas); EMA sembrada con SMA, RSI Wilder, Bollinger ddof=0 | Aceptada |
 | — | 2026-10-14 | Replay: interfaz `MarketFeed` común live/backtest; reloj avanzado al consumir el evento; empate en ms → trades antes que kline; klines solo al cierre | Aceptada |
+| — | 2026-10-14 | MEAN_REVERSION: setup (cierre fuera de banda + RSI extremo) → trigger re-entrada (CLOSE/TICK); TP = media, SL = extremo ∓ 5 bps; filtros objetivo ≥ 12 bps y R:R ≥ 1. Parámetros por defecto NO validados (K18) | Aceptada (provisional) |
 | ADR-0006 | 2026-10-14 | Históricos de data.binance.vision → Parquet diario zstd; float64 round-trip, ms int64; checksum obligatorio; días ausentes = error | Aceptada |
 
 Pendientes de decidir: User Data Stream (ccxt.pro vs WS nativo) · almacenamiento de históricos · apalancamiento máx. · despliegue (VPS/región).
