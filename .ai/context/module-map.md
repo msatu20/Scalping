@@ -13,7 +13,7 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | `src/scalping/market_data/ws_client.py` | ✅ | `BinanceFuturesWsClient` + `ReconnectPolicy`: backoff+jitter, stale timeout, reconexión 23 h, `on_connected`, cola con backpressure | market-data | MD |
 | `src/scalping/market_data/order_book.py` | ✅ | `LocalOrderBook` (estados UNSYNCED/AWAITING_BRIDGE/SYNCED, `pu`, poda, lecturas solo si SYNCED) + `OrderBookManager` (resync con backoff, `on_connected`, `is_tradeable` por latencia) | market-data | MD |
 | `src/scalping/market_data/rest_snapshot.py` | ✅ | `make_snapshot_fetcher` (aiohttp, `/fapi/v1/depth`) | market-data | MD |
-| `src/scalping/strategy/indicators/` | 🧱 | SMA/EMA/RSI/Bollinger incremental + vectorizado | strategy | STR |
+| `src/scalping/strategy/indicators/` | ✅ | `sma`/`SMA`, `ema`/`EMA`, `rsi`/`RSI`, `bollinger`/`BollingerBands`: batch (numpy) + incremental (`update`/`peek`), bit-idénticos (`_core.py`) | strategy | STR |
 | `src/scalping/strategy/patterns/` | 🧱 | Patrones de velas, detección de barridos de stops | strategy | STR |
 | `src/scalping/strategy/signals.py` | 📐 | Reglas → `Signal` | strategy | STR |
 | `src/scalping/execution/` | 🧱 | ccxt/REST firmado, órdenes, user data stream, rate limiter, conversión de símbolos ccxt | execution-risk | EXE |
