@@ -35,8 +35,11 @@ data/ (parquet) ──► backtest.replay ──(MarketEvent)──► strategy 
 - Tareas: ws_market, ws_user, strategy_loop, risk_monitor (kill-switch), rate_limiter.
 
 ## Market data (✅ parcial)
-`ws_client` (URL combinada de `streams`) → `parse_message` → `asyncio.Queue[MarketEvent]` → (pendiente: `order_book` local + strategy).
-- `on_connected` = punto de resync del libro tras cada (re)conexión.
+`ws_client` (URL combinada de `streams`) → `parse_message` → `asyncio.Queue[MarketEvent]` → `OrderBookManager.handle` (deltas) / strategy (klines, aggTrades — pendiente).
+- `ws_client(on_connected=manager.on_connected)`: cada (re)conexión resetea y resincroniza los libros.
+- Snapshot REST vía `rest_snapshot.make_snapshot_fetcher` (aiohttp).
+- Strategy lee `manager.books[s].imbalance(n)` / `snapshot(n)` solo si `manager.is_tradeable(s)`.
+- Runner que conecte todo: pendiente (T10).
 
 ## Configuración (✅)
 - `config/settings.py`: `pydantic-settings` + `.env` (gitignored). `TRADING_MODE = paper | testnet | live`; ver ADR-0002.

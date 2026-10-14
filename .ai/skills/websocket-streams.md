@@ -9,12 +9,13 @@
 - [ ] Handler no bloqueante; trabajo pesado fuera (cola acotada; política de descarte documentada).
 - [ ] Métricas: latencia evento→recepción, mensajes/s, reconexiones, huecos.
 
-## Order book local (diff depth)
+## Order book local (diff depth) — implementado en `market_data/order_book.py`
 1. Abrir WS `<symbol>@depth@100ms` y bufferizar.
-2. Snapshot REST `depth?limit=1000`.
-3. Descartar eventos con `u <= lastUpdateId`; primero válido debe cumplir `U <= lastUpdateId+1 <= u`.
-4. Cada evento siguiente: `U == prev_u + 1` (futuros: `pu == prev_u`); si no → resincronizar.
-5. Cantidad 0 → eliminar nivel.
+2. Snapshot REST `/fapi/v1/depth?limit=1000` (peso 20).
+3. Descartar eventos con `u < lastUpdateId`; el primero aplicado debe cumplir `U <= lastUpdateId+1` y `u >= lastUpdateId` (futuros: `U <= lastUpdateId <= u`).
+4. Cada evento siguiente: futuros `pu == prev_u` (spot `U == prev_u + 1`); si no → resincronizar.
+5. Cantidad 0 → eliminar nivel. Libro cruzado tras aplicar → resincronizar.
+6. Nunca leer el libro si no está SYNCED; no operar si la latencia supera el umbral.
 
 ## Tests mínimos
 - Parseo de payload real (fixture JSON). · Hueco de secuencia → resync. · Desconexión simulada → reconexión y estado coherente.

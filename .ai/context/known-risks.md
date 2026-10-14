@@ -14,5 +14,5 @@
 | K10 | EXE | Errores de precisión (float) | `Decimal` + filtros de símbolo (modelos core rechazan `float`) |
 | K11 | RSK | Liquidación en futuros por apalancamiento excesivo | Apalancamiento máx. en config; distancia SL ≪ distancia a liquidación |
 | K12 | BT | Funding (cada 8 h) ignorado en backtest | Modelar funding en el modelo de costes |
-| K13 | MD | Consumidor lento → backpressure en WS → datos con latencia creciente | Monitorizar `recv_time - event_time` y tamaño de cola; pausar entradas si supera umbral |
+| K13 | MD | Consumidor lento → backpressure en WS → datos con latencia creciente | ✅ Mitigado (T6): `OrderBookManager.is_tradeable` = SYNCED y latencia ≤ `max_latency_ms`; no se descartan deltas |
 | K14 | MD | URLs WS de futuros cambian (Binance) → sin datos | URLs en `config/settings.py`; T7 verificación; stale timeout reconecta y alerta |
