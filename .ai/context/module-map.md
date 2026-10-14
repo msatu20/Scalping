@@ -26,7 +26,11 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | `scripts/download_history.py` | ✅ | CLI de descarga (`--days`, `--start/--end`, `--kinds`) | backtesting | BT |
 | `src/scalping/backtest/replay.py` | ✅ | `ReplayFeed`: Parquet → `Kline`/`AggregatedTrade` ordenados; `replay()` síncrono y `run()` con cola (misma interfaz que live); reloj avanzado al consumir | backtesting | BT |
 | `src/scalping/core/feed.py` | ✅ | Protocol `MarketFeed` (`run`/`stop`) común a live y replay; `EventHandler` | orchestrator | CORE |
-| `src/scalping/backtest/` (sim_broker, métricas) | 📐 | sim_broker, costes (fees + funding), métricas | backtesting | BT |
+| `src/scalping/backtest/sim_broker.py` | ✅ | `SimBroker` (ADR-0007): maker/taker, slippage, post-only, SL/TP sobre trades o klines (pesimista), funding, PnL `Decimal` | backtesting | BT |
+| `src/scalping/backtest/funding.py` | ✅ | Funding histórico (REST, con mark price) → Parquet; `FundingSchedule` | backtesting | BT |
+| `src/scalping/backtest/engine.py` | ✅ | `Backtester` (replay → broker → estrategia), sizing fraccional fijo | backtesting | BT |
+| `src/scalping/backtest/metrics.py` | ✅ | `compute_metrics` (R, PF, drawdown, comisiones/bruto) | backtesting | BT |
+| `scripts/run_backtest.py` | ✅ | Backtest MEAN_REVERSION por CLI | backtesting | BT |
 | `tests/core/test_models.py` | ✅ | Tests de invariantes de modelos | orchestrator | CORE |
 | `tests/config/`, `tests/market_data/` | ✅ | Settings; parser (fixtures), streams, ws_client (servidor WS local), order_book + manager + fetcher REST (servidor aiohttp local) | dueño del módulo | CFG/MD |
 | `tests/integration/` | ✅ | Tests reales `@pytest.mark.live_readonly` (excluidos por defecto) | market-data | MD |

@@ -65,7 +65,7 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 ### T13 — Simulador de broker (sim_broker)
 - **Área/chunk:** BT/RSK · **Prioridad:** alta · **Origen:** change-log T12
 - **Descripción:** `backtest/sim_broker.py` que reciba `OrderIntent` y simule: fill maker (limit GTX: solo si el precio cruza, cola/probabilidad), fill taker (MARKET con slippage en ticks), SL/TP intra-vela con aggTrades, comisiones de `Settings` (maker 0,02 % / taker 0,05 %), funding cada 8 h. Debe implementar el futuro protocolo `Broker` (T2).
-- **Estado:** pendiente
+- **Estado:** hecho (2026-10-14) → ADR-0007, `backtest/sim_broker.py`, `engine.py`, `metrics.py`, `funding.py`
 
 ### T14 — Grabador de depth live a Parquet
 - **Área/chunk:** MD/BT · **Prioridad:** media · **Origen:** K17
@@ -79,5 +79,10 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 
 ### T16 — Investigación de MEAN_REVERSION con walk-forward
 - **Área/chunk:** STR/BT · **Prioridad:** media · **Origen:** K18
-- **Descripción:** solo tras T13. Separar in-sample / out-of-sample; evaluar filtros de régimen (bandwidth, tendencia EMA), SL por ATR, TP parcial, horario. Informe en `reports/`.
+- **Descripción:** T13 hecho: backtest −99,9 % (stop mediano 12 bps vs 8 bps de coste; sin costes −0,04 R). Separar in-sample / out-of-sample; exigir stop ≥ 3× coste ida y vuelta, entradas maker, filtros de régimen (bandwidth, tendencia EMA), SL por ATR, timeframes 3m/5m. Informe en `reports/`.
+- **Estado:** pendiente
+
+### T17 — `Broker` Protocol en core
+- **Área/chunk:** CORE/EXE · **Prioridad:** media · **Origen:** ADR-0007 (resto de T2)
+- **Descripción:** Protocol común (`submit`, `on_event`/actualización de estado, `is_busy`, posiciones, cierre) que implementen `SimBroker` y el futuro broker real ccxt, para que el runner de estrategia sea idéntico en backtest, paper y live.
 - **Estado:** pendiente

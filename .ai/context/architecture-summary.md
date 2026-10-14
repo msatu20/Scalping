@@ -18,6 +18,8 @@ Replay (✅ T12): `ReplayFeed(store, symbols, start, end)` cumple `core.feed.Mar
 - Orden: tiempo → (aggTrade antes que kline en el mismo ms) → símbolo → fila. Klines solo cerradas, en `close_time`.
 - Reloj: `FixedClock.advance_to(event.recv_time)` al **consumir** (nunca al producir) → sin fuga de tiempo futuro.
 - Sin depth histórico: estrategias de libro no son backtesteables aún (K17).
+Backtest (✅ T13, ADR-0007): `Backtester(store, symbols, start, end, strategy_factory, costs, sizing, price_source)`:
+por evento → `SimBroker.on_event` (fills/salidas de órdenes previas) → `strategy.on_event` → `Signal` → `position_size` → `OrderIntent` → `SimBroker.submit`. Al final `close_all` + `compute_metrics`.
 ```
 data/ (parquet) ──► backtest.replay (✅) ──(MarketEvent)──► strategy ──► risk ──► backtest.sim_broker
                                                                               (comisión, slippage, fills)

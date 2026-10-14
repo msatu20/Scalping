@@ -1,7 +1,7 @@
 # Active work
 
 ## En curso
-- (ninguna) — señal MEAN_REVERSION sin commit todavía.
+- (ninguna) — T13 sin commit todavía.
 
 ## Entorno
 - Python 3.12.10 en `.venv` (`.venv/Scripts/python.exe`). Python del sistema = 3.7: usar siempre el del venv.
@@ -11,16 +11,17 @@
 - Tras cambiar dependencias: `.venv/Scripts/python.exe -m pip install -e ".[dev]"`
 
 ## Datos disponibles (`data/`, gitignored)
-- klines 1m BTCUSDT/ETHUSDT: 2026-07-16..2026-10-12 · aggTrades: 2026-10-11..2026-10-12
+- klines 1m BTCUSDT/ETHUSDT: 2026-07-16..2026-10-12 · aggTrades: 2026-10-11..2026-10-12 · fundingRate: 2026-07-16..2026-10-12
 
 ## Siguiente
-1. T13 — `sim_broker` (fills maker/taker, comisiones, slippage, SL/TP intra-vela, funding) → primer backtest real de MEAN_REVERSION.
-2. T16 — Walk-forward de MEAN_REVERSION (diagnóstico preliminar desfavorable, K18).
+1. T16 — Investigación con walk-forward: MEAN_REVERSION descartada (−99,9 %); stops ≥ 3× coste, entradas maker, 3m/5m, filtros de régimen.
+2. T17 — `Broker` Protocol en core; T15 filtros de símbolo.
 3. T9 — Gestor central de rate limits / ban 418.
 4. T11 — Medir latencia desde VPS en Tokio antes de cualquier operativa live (K15).
 
 ## Hecho
-- 2026-10-14 · Señal MEAN_REVERSION (RSI+BB, CLOSE/TICK) + replay 89 días: ~15 señales/día, 32 % TP primero (`change-log/2026-10-14-mean-reversion-signal.md`).
+- 2026-10-14 · T13 SimBroker + backtest real: MEAN_REVERSION −99,9 % en 89 días, comisiones 6× el bruto (`change-log/2026-10-14-t13-sim-broker-backtest.md`).
+- 2026-10-14 · Señal MEAN_REVERSION — commit `73f54ca`.
 - 2026-10-14 · T12 replay de backtest — commit `fcb8fa6`.
 - 2026-10-14 · Indicadores SMA/EMA/RSI/Bollinger bit-idénticos — commit `fe5c295`.
 - 2026-10-14 · T5: históricos a Parquet + validación (ADR-0006) — commit `2b41f28`.

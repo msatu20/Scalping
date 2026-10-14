@@ -20,7 +20,15 @@ from datetime import UTC, date, datetime, timedelta
 
 import aiohttp
 
-from scalping.backtest import BinanceVisionDownloader, DataKind, DownloadStatus, HistoricalStore
+from scalping.backtest import (
+    BinanceVisionDownloader,
+    DataKind,
+    DownloadStatus,
+    HistoricalStore,
+    day_start_ms,
+    fetch_funding_rates,
+    save_funding,
+)
 from scalping.config import Settings
 from scalping.core import KlineInterval
 
@@ -36,6 +44,15 @@ async def main(args: argparse.Namespace) -> int:
         results = await downloader.download_range(
             symbols, [DataKind(k) for k in args.kinds], args.start, args.end, args.interval
         )
+        if args.funding:
+            rest = Settings(_env_file=None).rest_base_url  # type: ignore[call-arg]
+            end_ms = day_start_ms(args.end) + 86_400_000 - 1
+            for symbol in symbols:
+                frame = await fetch_funding_rates(
+                    session, rest, symbol, day_start_ms(args.start), end_ms
+                )
+                total = save_funding(store, symbol, frame)
+                print(f"  fundingRate {symbol}: {len(frame)} fetched, {total} stored")
 
     summary = Counter((r.kind.value, r.status.value) for r in results)
     rows = sum(r.rows for r in results)
@@ -58,12 +75,13 @@ def parse_args() -> argparse.Namespace:
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument("--symbols", nargs="+", type=str.upper)
-    parser.add_argument("--kinds", nargs="+", choices=[k.value for k in DataKind],
+    parser.add_argument("--kinds", nargs="*", choices=[k.value for k in DataKind],
                         default=[k.value for k in DataKind])  # fmt: skip
     parser.add_argument("--start", type=date.fromisoformat)
     parser.add_argument("--end", type=date.fromisoformat, default=yesterday)
     parser.add_argument("--days", type=int, help="alternative to --start: last N days up to --end")
     parser.add_argument("--interval", type=KlineInterval, default=KlineInterval.M1)
+    parser.add_argument("--funding", action="store_true", help="also fetch funding rates (REST)")
     parser.add_argument("--data-dir", default="data")
     parser.add_argument("--concurrency", type=int, default=4)
     args = parser.parse_args()
