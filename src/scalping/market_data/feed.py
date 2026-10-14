@@ -82,9 +82,11 @@ class MarketDataFeed:
         snapshot_limit: int = 1000,
         ws_base_url: str | None = None,
         rest_base_url: str | None = None,
+        streams: Sequence[str] | None = None,
     ) -> None:
         self._settings = settings
-        self._streams = default_streams(settings.symbols, intervals)
+        # Default: depth + aggTrade + klines per symbol; pass ``streams`` to narrow it.
+        self._streams = list(streams) if streams else default_streams(settings.symbols, intervals)
         self._on_event = on_event
         self._clock = clock
         self._reconnect_policy = reconnect_policy
@@ -96,6 +98,7 @@ class MarketDataFeed:
         self._clients: dict[StreamRoute, BinanceFuturesWsClient] = {}
         self._stopped = asyncio.Event()
         self.manager: OrderBookManager | None = None
+        self.clock: Clock | None = clock  # set to the server-aligned clock once running
         self.stats = FeedStats()
 
     @property
@@ -114,6 +117,7 @@ class MarketDataFeed:
         """Run until ``stop()``. Network errors are retried inside the WS clients."""
         async with aiohttp.ClientSession() as session:
             clock = self._clock or await self._server_aligned_clock(session)
+            self.clock = clock
             fetcher = make_snapshot_fetcher(
                 session, self._rest_base_url, clock, limit=self._snapshot_limit
             )

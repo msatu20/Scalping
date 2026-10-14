@@ -70,7 +70,7 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 ### T14 — Grabador de depth live a Parquet
 - **Área/chunk:** MD/BT · **Prioridad:** media · **Origen:** K17
 - **Descripción:** grabar snapshots + deltas del feed `/public` (o top-N del libro cada X ms) para poder backtestear estrategias de order book.
-- **Estado:** pendiente
+- **Estado:** en curso (2026-10-14) — grabando desde 05:13 UTC (`scripts/record_depth.py`); falta replay de depth para backtests (T19)
 
 ### T15 — Redondeo a filtros del símbolo (tickSize / stepSize / minNotional)
 - **Área/chunk:** EXE · **Prioridad:** alta (antes de órdenes) · **Origen:** change-log señal MEAN_REVERSION
@@ -90,4 +90,14 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 ### T18 — Siguiente hipótesis de estrategia (información distinta a RSI/BB)
 - **Área/chunk:** STR/BT/MD · **Prioridad:** alta · **Origen:** T16
 - **Descripción:** elegir y pre-registrar (ADR-0008) una hipótesis basada en microestructura: (a) `STOP_HUNT_REBOUND` / agresión con aggTrades (requiere ampliar aggTrades a ≥ 6–12 meses, ~5–15 GB), o (b) order-book imbalance / `ORDER_FLOW_SQUEEZE` (requiere T14: grabar depth live semanas antes de poder backtestear).
+- **Estado:** hecho (2026-10-14) — STOP_HUNT_REBOUND descartada (OOS −0,363 R, t −24,5), ver `reports/2026-10-14-t18-stop-hunt-walk-forward.md`
+
+### T19 — Replay de depth grabado para backtests de order book
+- **Área/chunk:** BT/MD · **Prioridad:** media · **Origen:** T14
+- **Descripción:** emitir snapshots top-N grabados (`load_depth`) como eventos en `ReplayFeed`, fusionados por tiempo con aggTrades/klines, para backtestear `ORDER_FLOW_SQUEEZE` / imbalance cuando haya ≥ 4–6 semanas grabadas.
+- **Estado:** pendiente
+
+### T20 — Decidir dirección tras T16 + T18 (barrera de costes, K19)
+- **Área/chunk:** STR · **Prioridad:** alta · **Origen:** T18
+- **Descripción:** opciones: (a) camino 2 order-book imbalance con depth grabado (T19, semanas de datos); (b) subir horizonte (15m–4h, stops ≥ 100 bps → costes ≪ R); (c) reducir costes (tier VIP / BNB) y re-evaluar; (d) pausar investigación de señales y consolidar infraestructura (T15, T17, T9, T11).
 - **Estado:** pendiente (decisión del usuario)

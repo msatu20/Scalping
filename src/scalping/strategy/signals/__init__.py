@@ -4,11 +4,14 @@ from scalping.strategy.signals.mean_reversion import (
     MeanReversionStrategy,
     TriggerMode,
 )
+from scalping.strategy.signals.stop_hunt import StopHuntParams, StopHuntReboundStrategy
 
 __all__ = [
     "MeanReversionParams",
     "MeanReversionStrategy",
     "SignalGenerator",
     "SignalHandler",
+    "StopHuntParams",
+    "StopHuntReboundStrategy",
     "TriggerMode",
 ]

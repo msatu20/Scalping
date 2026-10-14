@@ -1,5 +1,6 @@
 """Backtester (replay + strategy + SimBroker), sizing and metrics."""
 
+import dataclasses
 from datetime import date
 from decimal import Decimal as D
 from pathlib import Path
@@ -141,3 +142,29 @@ def test_maker_offset_beyond_tight_stop_is_skipped(tmp_path: Path) -> None:
                         maker_offset_bps=D(5000)).run()  # fmt: skip
     assert result.skipped == {"entry_outside_brackets": 1}
     assert "submitted" not in result.broker_stats
+
+
+def test_run_many_matches_individual_backtests(tmp_path: Path) -> None:
+    from scalping.backtest import RunSpec, run_many
+    from scalping.core import ExecutionStyle
+
+    store = HistoricalStore(tmp_path)
+    write_klines(store, CLOSES)
+    specs = [
+        RunSpec("taker", factory),
+        RunSpec("maker", factory, entry_style=ExecutionStyle.MAKER, maker_offset_bps=D(1)),
+        RunSpec("no-costs", factory, costs=CostModel(D(0), D(0), D(0))),
+    ]
+    together = run_many(store, [SYM], DAY, DAY, specs)
+    for spec in specs:
+        alone = Backtester(store, [SYM], DAY, DAY, spec.strategy_factory, costs=spec.costs,
+                           entry_style=spec.entry_style,
+                           maker_offset_bps=spec.maker_offset_bps).run()  # fmt: skip
+
+        def strip(trades: list[ClosedTrade]) -> list[ClosedTrade]:
+            return [dataclasses.replace(t, client_order_id="") for t in trades]  # random ids
+
+        assert strip(together[spec.name].trades) == strip(alone.trades)
+        assert together[spec.name].broker_stats == alone.broker_stats
+    with pytest.raises(ValueError, match="unique"):
+        run_many(store, [SYM], DAY, DAY, [specs[0], specs[0]])

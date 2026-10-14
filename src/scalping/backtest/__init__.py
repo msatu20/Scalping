@@ -10,9 +10,11 @@ from scalping.backtest.binance_vision import (
 from scalping.backtest.engine import (
     Backtester,
     BacktestResult,
+    RunSpec,
     SizingParams,
     StrategyFactory,
     position_size,
+    run_many,
 )
 from scalping.backtest.funding import (
     FundingEvent,
@@ -61,6 +63,7 @@ __all__ = [
     "MissingDataError",
     "PriceSource",
     "ReplayFeed",
+    "RunSpec",
     "SimBroker",
     "SizingParams",
     "StrategyFactory",
@@ -74,6 +77,7 @@ __all__ = [
     "funding_path",
     "parse_daily_zip",
     "position_size",
+    "run_many",
     "save_funding",
     "verify_checksum",
 ]

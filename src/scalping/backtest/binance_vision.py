@@ -170,6 +170,8 @@ class BinanceVisionDownloader:
         if path.exists():
             return DownloadResult(kind, symbol, day, DownloadStatus.SKIPPED)
         url = daily_url(kind, symbol, day, interval, self._base_url)
+        # The semaphore bounds the whole day (download + parse + write): parsed aggTrades
+        # days hold millions of rows, so unbounded parsing exhausts memory.
         async with self._semaphore:
             payload = await self._get(url)
             if payload is None:
@@ -178,11 +180,14 @@ class BinanceVisionDownloader:
             checksum = await self._get(url + ".CHECKSUM")
             if checksum is None:
                 raise ChecksumError(f"checksum file missing for {url}")
-        verify_checksum(payload, checksum.decode())
-        frame = await asyncio.to_thread(parse_daily_zip, payload, kind)
-        await asyncio.to_thread(self._store.write, frame, path)
-        log.info("stored %s %s %s (%d rows)", kind, symbol, day, len(frame))
-        return DownloadResult(kind, symbol, day, DownloadStatus.DOWNLOADED, len(frame))
+            verify_checksum(payload, checksum.decode())
+            frame = await asyncio.to_thread(parse_daily_zip, payload, kind)
+            del payload
+            await asyncio.to_thread(self._store.write, frame, path)
+            rows = len(frame)
+            del frame
+        log.info("stored %s %s %s (%d rows)", kind, symbol, day, rows)
+        return DownloadResult(kind, symbol, day, DownloadStatus.DOWNLOADED, rows)
 
     async def _get(self, url: str) -> bytes | None:
         """Body, or None on 404. Retries network errors and 5xx/429 with backoff."""
