@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "scalping"
+version = "0.1.0"
+description = "Bot de scalping para Binance USDT-M Futures (order flow + indicadores de corto plazo)"
+readme = "CLAUDE.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ccxt>=4.4",
+    "websockets>=13.0",
+    "aiohttp>=3.10",
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "pydantic>=2.8",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+# TA-Lib requiere la librería C nativa (en Windows: wheel precompilado). Solo se usa
+# como referencia en tests; los indicadores de producción se implementan en numpy.
+talib = ["TA-Lib>=0.5"]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "hypothesis>=6.100",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/scalping"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+addopts = "-q -m 'not testnet'"
+markers = ["testnet: tests contra Binance testnet (requieren autorización y claves)"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "src"
+packages = ["scalping"]
