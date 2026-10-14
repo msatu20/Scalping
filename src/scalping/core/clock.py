@@ -30,4 +30,10 @@ class FixedClock:
         return self._now_ms
 
     def advance(self, ms: int) -> None:
-        self._now_ms += ms
+        self.advance_to(self._now_ms + ms)
+
+    def advance_to(self, ms: int) -> None:
+        """Move to an absolute time; simulated time must never go backwards."""
+        if ms < self._now_ms:
+            raise ValueError(f"clock cannot go backwards: {ms} < {self._now_ms}")
+        self._now_ms = ms

@@ -5,7 +5,7 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | Ruta | Estado | Responsabilidad | Agente | Chunk |
 |---|---|---|---|---|
 | `src/scalping/core/models.py` | ✅ | Enums (`Side`, `ExecutionStyle`, `StrategyType`, `KlineInterval`) y modelos: `Kline`, `PriceLevel`, `OrderBookSnapshot`, `OrderBookDelta`, `AggregatedTrade`, `OrderBookImbalance`, `Signal`, `OrderIntent`, alias `MarketEvent` | orchestrator | CORE |
-| `src/scalping/core/clock.py` | ✅ | `Clock` (Protocol), `SystemClock` (offset servidor), `FixedClock` (tests/backtest) | orchestrator | CORE |
+| `src/scalping/core/clock.py` | ✅ | `Clock` (Protocol), `SystemClock` (offset servidor), `FixedClock` (tests/backtest; `advance_to` monótono) | orchestrator | CORE |
 | `src/scalping/market_data/parser.py` | ✅ | JSON crudo (raw/combinado) → `OrderBookDelta`/`AggregatedTrade`/`Kline`; REST depth → `OrderBookSnapshot`; `ParseError` | market-data | MD |
 | `src/scalping/market_data/streams.py` | ✅ | Nombres de streams, `StreamRoute` (`/public` libro, `/market` trades/velas), `route_of`, `routed_stream_urls` (ADR-0005) | market-data | MD |
 | `src/scalping/market_data/feed.py` | ✅ | `MarketDataFeed` (runner: reloj alineado, 2 WS por ruta → cola → `OrderBookManager` / `on_event`), `FeedStats` | market-data | MD |
@@ -22,7 +22,9 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | `src/scalping/backtest/store.py` | ✅ | `HistoricalStore` (Parquet diario, escritura atómica, `load` falla si faltan días), `find_kline_gaps` | backtesting | BT |
 | `src/scalping/backtest/binance_vision.py` | ✅ | `BinanceVisionDownloader` (checksum SHA-256, reintentos, idempotente), `parse_daily_zip` | backtesting | BT |
 | `scripts/download_history.py` | ✅ | CLI de descarga (`--days`, `--start/--end`, `--kinds`) | backtesting | BT |
-| `src/scalping/backtest/` (replay, sim_broker, métricas) | 📐 | Replay, sim_broker, costes (fees + funding), métricas | backtesting | BT |
+| `src/scalping/backtest/replay.py` | ✅ | `ReplayFeed`: Parquet → `Kline`/`AggregatedTrade` ordenados; `replay()` síncrono y `run()` con cola (misma interfaz que live); reloj avanzado al consumir | backtesting | BT |
+| `src/scalping/core/feed.py` | ✅ | Protocol `MarketFeed` (`run`/`stop`) común a live y replay; `EventHandler` | orchestrator | CORE |
+| `src/scalping/backtest/` (sim_broker, métricas) | 📐 | sim_broker, costes (fees + funding), métricas | backtesting | BT |
 | `tests/core/test_models.py` | ✅ | Tests de invariantes de modelos | orchestrator | CORE |
 | `tests/config/`, `tests/market_data/` | ✅ | Settings; parser (fixtures), streams, ws_client (servidor WS local), order_book + manager + fetcher REST (servidor aiohttp local) | dueño del módulo | CFG/MD |
 | `tests/integration/` | ✅ | Tests reales `@pytest.mark.live_readonly` (excluidos por defecto) | market-data | MD |

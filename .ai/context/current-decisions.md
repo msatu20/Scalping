@@ -16,6 +16,7 @@
 | — | 2026-10-14 | Resync solo por hueco/reconexión; latencia alta → libro no operable (no resync) | Aceptada |
 | ADR-0005 | 2026-10-14 | WS enrutado: `/public` (depth) y `/market` (aggTrade, kline); una conexión por ruta | Aceptada |
 | — | 2026-10-14 | Indicadores: paridad batch/incremental **bit a bit** (sumas izquierda→derecha, funciones de paso compartidas); EMA sembrada con SMA, RSI Wilder, Bollinger ddof=0 | Aceptada |
+| — | 2026-10-14 | Replay: interfaz `MarketFeed` común live/backtest; reloj avanzado al consumir el evento; empate en ms → trades antes que kline; klines solo al cierre | Aceptada |
 | ADR-0006 | 2026-10-14 | Históricos de data.binance.vision → Parquet diario zstd; float64 round-trip, ms int64; checksum obligatorio; días ausentes = error | Aceptada |
 
 Pendientes de decidir: User Data Stream (ccxt.pro vs WS nativo) · almacenamiento de históricos · apalancamiento máx. · despliegue (VPS/región).

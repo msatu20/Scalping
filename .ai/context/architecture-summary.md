@@ -14,8 +14,12 @@ Binance REST ◄── execution ◄──(OrderIntent aprobado)── risk ◄�
 
 ## Flujo backtest
 Datos (✅, ADR-0006): `scripts/download_history.py` → `BinanceVisionDownloader` (checksum) → `HistoricalStore` → `data/futures_um/…/<día>.parquet`; lectura con `HistoricalStore.load(kind, symbol, start, end)`.
+Replay (✅ T12): `ReplayFeed(store, symbols, start, end)` cumple `core.feed.MarketFeed` igual que `MarketDataFeed` → la estrategia solo ve `on_event(event)` + `Clock`.
+- Orden: tiempo → (aggTrade antes que kline en el mismo ms) → símbolo → fila. Klines solo cerradas, en `close_time`.
+- Reloj: `FixedClock.advance_to(event.recv_time)` al **consumir** (nunca al producir) → sin fuga de tiempo futuro.
+- Sin depth histórico: estrategias de libro no son backtesteables aún (K17).
 ```
-data/ (parquet) ──► backtest.replay (📐 T12) ──(MarketEvent)──► strategy ──► risk ──► backtest.sim_broker
+data/ (parquet) ──► backtest.replay (✅) ──(MarketEvent)──► strategy ──► risk ──► backtest.sim_broker
                                                                               (comisión, slippage, fills)
                                                                     ──► metrics ──► reports/
 ```

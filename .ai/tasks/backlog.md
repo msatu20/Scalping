@@ -60,4 +60,14 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 ### T12 — Replay de backtest (Parquet → eventos core)
 - **Área/chunk:** BT · **Prioridad:** alta · **Origen:** change-log T5
 - **Descripción:** `backtest/replay.py`: lee `HistoricalStore` por rango y emite `Kline` / `AggregatedTrade` (core) fusionados por tiempo, sin look-ahead (kline solo al cierre). Misma interfaz que el feed live (`on_event`) para paridad strategy live/backtest.
+- **Estado:** hecho (2026-10-14) — `backtest/replay.py`, ver change-log t12
+
+### T13 — Simulador de broker (sim_broker)
+- **Área/chunk:** BT/RSK · **Prioridad:** alta · **Origen:** change-log T12
+- **Descripción:** `backtest/sim_broker.py` que reciba `OrderIntent` y simule: fill maker (limit GTX: solo si el precio cruza, cola/probabilidad), fill taker (MARKET con slippage en ticks), SL/TP intra-vela con aggTrades, comisiones de `Settings` (maker 0,02 % / taker 0,05 %), funding cada 8 h. Debe implementar el futuro protocolo `Broker` (T2).
+- **Estado:** pendiente
+
+### T14 — Grabador de depth live a Parquet
+- **Área/chunk:** MD/BT · **Prioridad:** media · **Origen:** K17
+- **Descripción:** grabar snapshots + deltas del feed `/public` (o top-N del libro cada X ms) para poder backtestear estrategias de order book.
 - **Estado:** pendiente

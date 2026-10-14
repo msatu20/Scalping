@@ -1,4 +1,5 @@
 from scalping.core.clock import Clock, FixedClock, SystemClock
+from scalping.core.feed import EventHandler, MarketFeed
 from scalping.core.models import (
     AggregatedTrade,
     ExecutionStyle,
@@ -18,11 +19,13 @@ from scalping.core.models import (
 __all__ = [
     "AggregatedTrade",
     "Clock",
+    "EventHandler",
     "ExecutionStyle",
     "FixedClock",
     "Kline",
     "KlineInterval",
     "MarketEvent",
+    "MarketFeed",
     "OrderBookDelta",
     "OrderBookImbalance",
     "OrderBookSnapshot",
