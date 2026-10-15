@@ -1,4 +1,4 @@
-"""Record Binance USDⓈ-M depth (top-N of the synced local book) to Parquet — T14.
+"""Record Binance USDS-M depth (top-N of the synced local book) to Parquet — T14.
 
 Public data only (no keys). Runs until stopped:
 

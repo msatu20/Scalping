@@ -46,6 +46,7 @@ class KlineInterval(StrEnum):
     M5 = "5m"
     M15 = "15m"
     H1 = "1h"
+    H4 = "4h"
     # Keep members in ascending duration: code relies on the declaration order.
 
     @property
@@ -53,7 +54,14 @@ class KlineInterval(StrEnum):
         return _INTERVAL_MS[self.value]
 
 
-_INTERVAL_MS = {"1m": 60_000, "3m": 180_000, "5m": 300_000, "15m": 900_000, "1h": 3_600_000}
+_INTERVAL_MS = {
+    "1m": 60_000,
+    "3m": 180_000,
+    "5m": 300_000,
+    "15m": 900_000,
+    "1h": 3_600_000,
+    "4h": 14_400_000,
+}
 
 # --------------------------------------------------------------------------- validation helpers
 

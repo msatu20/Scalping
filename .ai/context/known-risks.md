@@ -23,4 +23,7 @@
 | K20 | STR/BT | Entradas maker sufren selección adversa (T18: −0,07 R sin costes vs ≈ 0 taker) | No asumir que maker mejora una señal; medirlo siempre con control sin costes |
 | K21 | STR/BT | Potencia estadística insuficiente: efectos de ~+0,05 R requieren ~4 000 trades OOS para t ≥ 2; con 2 activos × 3 años a 1 h hay ~950 → riesgo de aceptar ruido o rechazar un efecto real | Ampliar activos (top líquidos USDT-M) y años (desde 2020) antes de decidir; no afinar parámetros sobre muestras pequeñas |
 | K22 | STR | Deterioro temporal del efecto tendencia (OOS 2024 +0,13 R → 2026 −0,08 R) | Evaluar por año/régimen en todo experimento; exigir estabilidad, no solo media |
+| K23 | BT | Sesgo de supervivencia en el universo (activos elegidos con información de hoy); EOS deslistado incluido para mitigar | Confirmaciones con activos no usados; declarar universo antes de mirar resultados |
+| K24 | BT/STR | Re-selección frecuente de variantes con ventanas cortas persigue ruido (T21: OOS 0 vs regla fija +0,075 R in-sample) | Preferir reglas fijas pre-declaradas; si se selecciona, ventanas de train largas y pocas variantes |
+| K25 | BT | Anomalías en datos de Binance (taker_buy > volumen en 2 velas 1m) | `repair_klines` en la ingesta, con log; validaciones del core las detectan |
 | K15 | MD/EXE | Latencia geográfica alta (~365 ms media, 831 ms máx. desde el equipo local) → señales tardías, libro intermitentemente no operable | T11: medir desde VPS en Tokio (ap-northeast-1); ajustar `max_latency_ms`; no operar live desde el equipo local sin medirlo |

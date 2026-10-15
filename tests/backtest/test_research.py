@@ -41,3 +41,19 @@ def test_report_sections() -> None:
     ):
         assert section in report
     assert walk_forward_report("T", [], {}, walk_forward({}, [fold])).endswith("Sin resultados.\n")
+
+
+def test_evaluate_criteria() -> None:
+    from scalping.backtest.research import criteria_table, evaluate_criteria
+
+    fold = Fold(date(2024, 1, 1), date(2024, 3, 31), date(2024, 4, 1), date(2025, 12, 31))
+    good = ([rec(date(2024, 5, 1), 1.0, s) for s in ("A", "B")] * 20
+            + [rec(date(2025, 5, 1), -0.5, s) for s in ("A", "B")] * 20
+            + [rec(date(2025, 6, 1), 1.0, s) for s in ("A", "B")] * 20)  # fmt: skip
+    train = [rec(date(2024, 2, 1), 0.5)] * 30
+    wf = walk_forward({"v": train + good}, [fold])
+    crit = {c.name: c for c in evaluate_criteria(wf)}
+    assert crit["≥ 200 trades OOS"].passed is False  # 120 trades
+    assert crit["Años positivos ≥ 70%"].observed == "2/2"
+    assert crit["Activos positivos ≥ 60%"].passed
+    assert "NO APROBADA" in "\n".join(criteria_table(list(crit.values())))

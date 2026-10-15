@@ -239,6 +239,7 @@ def main(args: argparse.Namespace) -> int:
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]  # Windows consoles: cp1252
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )

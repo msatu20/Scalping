@@ -101,7 +101,9 @@ def find_kline_gaps(klines: pd.DataFrame, interval: KlineInterval) -> pd.DataFra
 _SUM_COLUMNS = ("volume", "quote_volume", "count", "taker_buy_volume", "taker_buy_quote_volume")
 
 
-def resample_klines(klines: pd.DataFrame, target: KlineInterval) -> pd.DataFrame:
+def resample_klines(
+    klines: pd.DataFrame, target: KlineInterval, strict: bool = True
+) -> pd.DataFrame:
     """Aggregate 1m klines into ``target`` candles (Binance definition: open of the first,
     max high, min low, close of the last, summed volumes). Requires complete buckets."""
     step = target.ms
@@ -109,7 +111,7 @@ def resample_klines(klines: pd.DataFrame, target: KlineInterval) -> pd.DataFrame
     grouped = klines.groupby(bucket, sort=True)
     sizes = grouped.size()
     expected = step // KlineInterval.M1.ms
-    if (sizes != expected).any():
+    if strict and (sizes != expected).any():
         incomplete = sizes[sizes != expected].index.tolist()[:3]
         raise ValueError(f"incomplete {target} buckets (first: {incomplete})")
     out = pd.DataFrame(
@@ -143,10 +145,39 @@ def resample_klines(klines: pd.DataFrame, target: KlineInterval) -> pd.DataFrame
 
 
 def resample_day(store: HistoricalStore, symbol: str, day: date, target: KlineInterval) -> bool:
-    """Write ``target`` klines for ``day`` from stored 1m klines. False if already present."""
+    """Write ``target`` klines for ``day`` from stored 1m klines. False if already present.
+
+    Tolerates missing minutes (exchange outages): like Binance, a candle aggregates the
+    minutes that exist; buckets with no minute at all produce no candle.
+    """
     path = store.path(DataKind.KLINES, symbol, day, target)
     if path.exists():
         return False
     minute = store.load(DataKind.KLINES, symbol, day, day, KlineInterval.M1)
-    store.write(resample_klines(minute, target), path)
+    store.write(resample_klines(minute, target, strict=False), path)
     return True
+
+
+def available_segments(
+    store: HistoricalStore,
+    kind: DataKind,
+    symbol: str,
+    start: date,
+    end: date,
+    interval: KlineInterval = KlineInterval.M1,
+) -> list[tuple[date, date]]:
+    """Contiguous runs of stored days in ``[start, end]`` (e.g. listing/delisting, outages)."""
+    segments: list[tuple[date, date]] = []
+    run_start: date | None = None
+    prev: date | None = None
+    for day in day_range(start, end):
+        if store.has(kind, symbol, day, interval):
+            if run_start is None:
+                run_start = day
+            prev = day
+        elif run_start is not None and prev is not None:
+            segments.append((run_start, prev))
+            run_start = None
+    if run_start is not None and prev is not None:
+        segments.append((run_start, prev))
+    return segments

@@ -218,3 +218,70 @@ def test_resample_klines_ohlc_and_completeness() -> None:
     assert out.iloc[1]["close_time"] == 1_799_999 and out.iloc[1]["count"] == 30
     with pytest.raises(ValueError, match="incomplete"):
         resample_klines(minute.iloc[:20], KlineInterval.M15)
+
+
+async def test_monthly_download_splits_into_days_and_falls_back(tmp_path: Path) -> None:
+    from scalping.backtest import day_start_ms
+
+    starts = [
+        day_start_ms(d) + m * 60_000 for d in (date(2026, 2, 1), date(2026, 2, 2)) for m in range(2)
+    ]
+    rows = [f"{t},1,2,0.5,1.5,3,{t + 59_999},4,5,1,2,0" for t in starts]
+    monthly = make_zip([KLINE_HEADER, *rows])
+    daily = make_zip([KLINE_HEADER, f"{day_start_ms(date(2026, 3, 1))},1,2,0.5,1.5,3,"
+                      f"{day_start_ms(date(2026, 3, 1)) + 59_999},4,5,1,2,0"])  # fmt: skip
+    files = {
+        "/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2026-02.zip": monthly,
+        "/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2026-02.zip.CHECKSUM": checksum_of(monthly).encode(),
+        # 2026-03 monthly not published -> daily fallback
+        "/daily/klines/BTCUSDT/1m/BTCUSDT-1m-2026-03-01.zip": daily,
+        "/daily/klines/BTCUSDT/1m/BTCUSDT-1m-2026-03-01.zip.CHECKSUM": checksum_of(daily).encode(),
+    }
+
+    async def handler(request: web.Request) -> web.Response:
+        body = files.get(request.path)
+        return web.Response(body=body) if body else web.Response(status=404)
+
+    app = web.Application()
+    app.router.add_get("/{tail:.*}", handler)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    await web.TCPSite(runner, "127.0.0.1", 0).start()
+    base = f"http://127.0.0.1:{runner.addresses[0][1]}/daily"
+    store = HistoricalStore(tmp_path)
+    try:
+        async with aiohttp.ClientSession() as session:
+            dl = BinanceVisionDownloader(session, store, base_url=base)
+            results = await dl.download_range(["BTCUSDT"], [DataKind.KLINES], date(2026, 2, 1),
+                                              date(2026, 3, 1), monthly=True)  # fmt: skip
+            again = await dl.download_range(["BTCUSDT"], [DataKind.KLINES], date(2026, 2, 1),
+                                            date(2026, 2, 28), monthly=True)  # fmt: skip
+    finally:
+        await runner.cleanup()
+
+    feb1 = store.load(DataKind.KLINES, "BTCUSDT", date(2026, 2, 1), date(2026, 2, 1))
+    assert len(feb1) == 2 and store.has(DataKind.KLINES, "BTCUSDT", date(2026, 2, 2))
+    assert not store.has(DataKind.KLINES, "BTCUSDT", date(2026, 2, 3))  # no rows that day
+    assert store.has(DataKind.KLINES, "BTCUSDT", date(2026, 3, 1))  # daily fallback
+    statuses = [r.status for r in results]
+    assert statuses.count(DownloadStatus.DOWNLOADED) == 2  # Feb monthly + Mar 1 daily
+    assert again[0].status is DownloadStatus.DOWNLOADED  # Feb days 3..28 still missing
+
+
+def test_available_segments_and_tolerant_resample(tmp_path: Path) -> None:
+    from scalping.backtest.store import available_segments, resample_klines
+
+    store = HistoricalStore(tmp_path)
+    for d in (D1, D3):
+        store.write(pd.DataFrame({"open_time": [1]}), store.path(DataKind.KLINES, "X", d))
+    assert available_segments(store, DataKind.KLINES, "X", D1, D3) == [(D1, D1), (D3, D3)]
+    minute = pd.DataFrame({"open_time": [0, 60_000], "open": 1.0, "high": 2.0, "low": 0.5,
+                           "close": 1.5, "close_time": [59_999, 119_999]})  # fmt: skip
+    assert len(resample_klines(minute, KlineInterval.M15, strict=False)) == 1
+
+
+def test_klines_with_taker_volume_above_total_are_repaired() -> None:
+    row = "1701347700000,0.6,0.61,0.59,0.6,91695.7,1701347759999,55000,10,132462.5,80000,0"
+    frame = parse_daily_zip(make_zip([KLINE_HEADER, row]), DataKind.KLINES)
+    assert frame.loc[0, "taker_buy_volume"] == 91695.7
+    assert frame.loc[0, "taker_buy_quote_volume"] == 55000

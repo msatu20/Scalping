@@ -105,9 +105,14 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 ### T21 — Siguiente experimento con potencia estadística (horizonte 1h–4h)
 - **Área/chunk:** STR/BT · **Prioridad:** alta · **Origen:** T20, K21
 - **Descripción:** pre-registrar (nuevo ADR) un experimento de tendencia/momentum con más potencia: universo de ~10 perpetuos USDT-M líquidos, datos desde 2020 (klines 1m vía data.binance.vision + resample), intervalos 1h/4h, rejilla pequeña. Objetivo ≥ 4 000 trades OOS. Incluir estabilidad por año como criterio.
-- **Estado:** pendiente (decisión del usuario)
+- **Estado:** hecho (2026-10-15) — NO APROBADA (OOS +0,001 R); hallazgo regla fija 4h-n20-k2-r2 (in-sample t +3,32, 7/7 años) → T23
 
 ### T22 — Paper trading runner (SimBroker + MarketDataFeed)
 - **Área/chunk:** EXE/STR · **Prioridad:** media · **Origen:** T17
 - **Descripción:** proceso desacoplado que conecte feed live → estrategia → `apply_filters` (T15) → `SimBroker` (Protocol `Broker`), con log de órdenes/PnL. Solo se activará con una estrategia que cumpla ADR-0008.
 - **Estado:** pendiente
+
+### T23 — Confirmación de la regla fija 4h-n20-k2-r2 en datos no examinados
+- **Área/chunk:** STR/BT · **Prioridad:** alta · **Origen:** T21 (K24)
+- **Descripción:** pre-registrar (ADR-0012) la regla fija sin ajuste en activos **fuera del universo de T21** (p. ej. SOL, BNB, DOGE, AVAX, DOT, ATOM… desde su listado) y/o en forward (paper). Criterios a fijar con el usuario ANTES de ejecutar.
+- **Estado:** pendiente (decisión del usuario: criterios, en particular el umbral de PF)

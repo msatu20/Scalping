@@ -28,6 +28,8 @@
 | — | 2026-10-14 | Velas 15m/1h se construyen desde 1m (`resample_klines`): OHLC/tiempos/count exactos vs Binance 5m en 12 meses × 2 símbolos | Aceptada |
 | — | 2026-10-14 | Paper trading = `SimBroker` (Protocol `Broker`) alimentado por `MarketDataFeed`; broker real solo con aprobación explícita | Aceptada |
 | — | 2026-10-14 | **TREND_BREAKOUT no aprobada** (OOS +0,023 R, t +0,41; PF 1,03) pero primera familia con ventaja bruta (16/16 > 0 sin costes); horizonte 1h+ = dirección prometedora, falta potencia estadística | Aceptada |
+| ADR-0011 | 2026-10-15 | TREND_BREAKOUT multi-activo 1h–4h 2020–2026: **NO APROBADA** (OOS walk-forward +0,001 R, t +0,04); la re-selección mensual persigue ruido; regla fija 4h-n20-k2-r2 = hipótesis a confirmar fuera de muestra | Aceptada |
+| — | 2026-10-15 | Datos: anomalías upstream (taker > volumen) se recortan y se registran al ingerir (`repair_klines`) | Aceptada |
 | ADR-0006 | 2026-10-14 | Históricos de data.binance.vision → Parquet diario zstd; float64 round-trip, ms int64; checksum obligatorio; días ausentes = error | Aceptada |
 
 Pendientes de decidir: User Data Stream (ccxt.pro vs WS nativo) · almacenamiento de históricos · apalancamiento máx. · despliegue (VPS/región).

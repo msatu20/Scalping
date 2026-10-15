@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from scalping.backtest.walk_forward import Stats, TradeRecord, WalkForwardResult
@@ -53,6 +54,7 @@ def walk_forward_report(
     meta: Sequence[str],
     trades: Mapping[str, Sequence[TradeRecord]],
     wf: WalkForwardResult,
+    criteria: Sequence[Criterion] | None = None,
 ) -> str:
     real, control = split_controls(trades)
     if not real:
@@ -73,6 +75,8 @@ def walk_forward_report(
     ]
     if best in control:
         lines.append(f"| La misma sin costes (control) | {fmt_stats(Stats.of(control[best]))} |")
+    if criteria:
+        lines += ["", *criteria_table(criteria)]
     positive = sum(1 for fr in wf.folds if fr.test.trades and fr.test.total_r > 0)
     with_trades = sum(1 for fr in wf.folds if fr.test.trades)
     lines += [
@@ -113,3 +117,58 @@ def walk_forward_report(
         "",
     ]
     return "\n".join(lines)
+
+
+@dataclass(frozen=True, slots=True)
+class Criterion:
+    name: str
+    observed: str
+    passed: bool
+
+
+def evaluate_criteria(
+    wf: WalkForwardResult,
+    min_group_trades: int = 30,
+    year_share: float = 0.7,
+    worst_year_r: float = -0.10,
+    symbol_share: float = 0.6,
+) -> list[Criterion]:
+    """Pre-registered approval criteria (ADR-0008 + stability/breadth of ADR-0011)."""
+    oos = wf.oos
+    folds = [fr for fr in wf.folds if fr.test.trades]
+    positive_folds = sum(1 for fr in folds if fr.test.total_r > 0)
+    years = {
+        k: s for k, s in breakdown(wf.oos_records, "year").items() if s.trades >= min_group_trades
+    }
+    symbols = {
+        k: s for k, s in breakdown(wf.oos_records, "symbol").items() if s.trades >= min_group_trades
+    }
+    pos_years = sum(1 for s in years.values() if s.mean_r > 0)
+    pos_symbols = sum(1 for s in symbols.values() if s.mean_r > 0)
+    worst = min((s.mean_r for s in years.values()), default=0.0)
+    return [
+        Criterion("OOS mean R > 0 y t ≥ 2", f"{oos.mean_r:+.3f} R, t {oos.t_stat:+.2f}",
+                  oos.mean_r > 0 and oos.t_stat >= 2),
+        Criterion("Profit factor ≥ 1,2", f"{oos.profit_factor:.2f}", oos.profit_factor >= 1.2),
+        Criterion("≥ 200 trades OOS", str(oos.trades), oos.trades >= 200),
+        Criterion("Mayoría de tramos positivos", f"{positive_folds}/{len(folds)}",
+                  bool(folds) and positive_folds > len(folds) / 2),
+        Criterion(f"Años positivos ≥ {year_share:.0%}", f"{pos_years}/{len(years)}",
+                  bool(years) and pos_years / len(years) >= year_share),
+        Criterion(f"Ningún año < {worst_year_r:+.2f} R", f"peor {worst:+.3f} R",
+                  bool(years) and worst >= worst_year_r),
+        Criterion(f"Activos positivos ≥ {symbol_share:.0%}", f"{pos_symbols}/{len(symbols)}",
+                  bool(symbols) and pos_symbols / len(symbols) >= symbol_share),
+    ]  # fmt: skip
+
+
+def criteria_table(criteria: Sequence[Criterion]) -> list[str]:
+    verdict = "**APROBADA**" if all(c.passed for c in criteria) else "**NO APROBADA**"
+    lines = [
+        "## Criterios pre-registrados",
+        "",
+        "| Criterio | Observado | Cumple |",
+        "|---|---|---|",
+    ]
+    lines += [f"| {c.name} | {c.observed} | {'✅' if c.passed else '❌'} |" for c in criteria]
+    return [*lines, "", f"Veredicto: {verdict}", ""]

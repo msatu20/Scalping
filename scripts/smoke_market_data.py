@@ -1,4 +1,4 @@
-"""Read-only smoke test against real Binance USDⓈ-M Futures public streams (T7/T10).
+"""Read-only smoke test against real Binance USDS-M Futures public streams (T7/T10).
 
 No API keys, no orders: forces TRADING_MODE=paper and only listens to public data.
 

@@ -1,4 +1,4 @@
-"""Download Binance USDⓈ-M Futures history (klines + aggTrades) to Parquet (T5).
+"""Download Binance USDS-M Futures history (klines + aggTrades) to Parquet (T5).
 
     .venv/Scripts/python.exe scripts/download_history.py --start 2026-10-01 --end 2026-10-13
     .venv/Scripts/python.exe scripts/download_history.py --days 7 --kinds klines
@@ -42,7 +42,12 @@ async def main(args: argparse.Namespace) -> int:
     async with aiohttp.ClientSession(timeout=timeout) as session:
         downloader = BinanceVisionDownloader(session, store, concurrency=args.concurrency)
         results = await downloader.download_range(
-            symbols, [DataKind(k) for k in args.kinds], args.start, args.end, args.interval
+            symbols,
+            [DataKind(k) for k in args.kinds],
+            args.start,
+            args.end,
+            args.interval,
+            monthly=args.monthly,
         )
         if args.funding:
             rest = Settings(_env_file=None).rest_base_url  # type: ignore[call-arg]
@@ -82,6 +87,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--days", type=int, help="alternative to --start: last N days up to --end")
     parser.add_argument("--interval", type=KlineInterval, default=KlineInterval.M1)
     parser.add_argument("--funding", action="store_true", help="also fetch funding rates (REST)")
+    parser.add_argument(
+        "--monthly", action="store_true", help="monthly files for complete months (fewer requests)"
+    )
     parser.add_argument("--data-dir", default="data")
     parser.add_argument("--concurrency", type=int, default=4)
     args = parser.parse_args()

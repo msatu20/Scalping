@@ -22,7 +22,7 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | `src/scalping/strategy/signals/stop_hunt.py` | ✅ | `StopHuntReboundStrategy` (T18, ADR-0009): barrido de nivel + estallido de agresión + recuperación rápida, tick a tick | strategy | STR |
 | `src/scalping/strategy/signals/trend_breakout.py` | ✅ | `TrendBreakoutStrategy` (ADR-0010): ruptura de canal N a favor de EMA200, stop k×ATR | strategy | STR |
 | `src/scalping/strategy/indicators/atr.py` | ✅ | ATR Wilder batch + incremental bit-idénticos | strategy | STR |
-| `src/scalping/backtest/research.py` | ✅ | Helpers de informes walk-forward (controles, desglose por símbolo/año) | backtesting | BT |
+| `src/scalping/backtest/research.py` | ✅ | Helpers de informes walk-forward (controles, desglose por símbolo/año) + `evaluate_criteria` (veredicto mecánico pre-registrado, ADR-0011) | backtesting | BT |
 | `scripts/research_trend_breakout.py`, `scripts/resample_klines.py` | ✅ | Investigación T20; velas 15m/1h desde 1m (validado exacto vs Binance 5m) | backtesting | BT |
 | `src/scalping/strategy/orderflow.py` | ✅ | `AggressionTracker`: notional agresivo por lado en ventana vs media de la última hora, O(1)/trade | strategy | STR |
 | `src/scalping/strategy/signals/mean_reversion.py` | ✅ | `MeanReversionStrategy` (RSI+BB, setup → re-entrada, modos CLOSE/TICK, filtros fees y R:R) | strategy | STR |
@@ -33,8 +33,8 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | `src/scalping/execution/` (broker real ccxt, user data stream) | 📐 | Solo para live (requiere aprobación explícita) | execution-risk | EXE |
 | `src/scalping/risk/` | 🧱 | Tamaño, SL/TP, apalancamiento, límites, kill-switch | execution-risk | RSK |
 | `src/scalping/config/settings.py` | ✅ | `Settings` (pydantic-settings, inmutable), `TradingMode`, `HARD_MAX_LEVERAGE`=10, URLs por modo, guardas paper/testnet/live | execution-risk | CFG |
-| `src/scalping/backtest/store.py` | ✅ | `HistoricalStore` (Parquet diario, escritura atómica, `load` falla si faltan días), `find_kline_gaps` | backtesting | BT |
-| `src/scalping/backtest/binance_vision.py` | ✅ | `BinanceVisionDownloader` (checksum SHA-256, reintentos, idempotente), `parse_daily_zip` | backtesting | BT |
+| `src/scalping/backtest/store.py` | ✅ | `HistoricalStore` (Parquet diario, escritura atómica, `load` falla si faltan días), `find_kline_gaps`, `resample_klines`/`resample_day` (tolerante a minutos ausentes), `available_segments` | backtesting | BT |
+| `src/scalping/backtest/binance_vision.py` | ✅ | `BinanceVisionDownloader` (checksum SHA-256, reintentos, idempotente; ficheros mensuales `monthly=True` divididos en días), `parse_daily_zip` | backtesting | BT |
 | `scripts/download_history.py` | ✅ | CLI de descarga (`--days`, `--start/--end`, `--kinds`) | backtesting | BT |
 | `src/scalping/backtest/replay.py` | ✅ | `ReplayFeed`: Parquet → `Kline`/`AggregatedTrade` ordenados; `replay()` síncrono y `run()` con cola (misma interfaz que live); reloj avanzado al consumir | backtesting | BT |
 | `src/scalping/core/feed.py` | ✅ | Protocol `MarketFeed` (`run`/`stop`) común a live y replay; `EventHandler` | orchestrator | CORE |

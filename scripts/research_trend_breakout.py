@@ -21,6 +21,7 @@ from pathlib import Path
 
 from scalping.backtest import (
     CostModel,
+    DataKind,
     FundingSchedule,
     HistoricalStore,
     PriceSource,
@@ -30,17 +31,18 @@ from scalping.backtest import (
 )
 from scalping.backtest.research import (
     CONTROL_SUFFIX,
+    evaluate_criteria,
     fmt_stats,
     split_controls,
     walk_forward_report,
 )
+from scalping.backtest.store import available_segments
 from scalping.backtest.walk_forward import TradeRecord, make_folds, walk_forward
 from scalping.config import Settings
 from scalping.core import Clock, KlineInterval
 from scalping.strategy.signals import SignalHandler, TrendBreakoutParams, TrendBreakoutStrategy
 
 SYMBOLS = ("BTCUSDT", "ETHUSDT")
-INTERVALS = (KlineInterval.M15, KlineInterval.H1)
 ZERO_COSTS = CostModel(maker_fee=Decimal(0), taker_fee=Decimal(0), taker_slippage_bps=Decimal(0))
 CACHE_VERSION = 1
 
@@ -90,9 +92,22 @@ def run_job(job: Job) -> tuple[str, KlineInterval, dict[str, list[TradeRecord]],
 
 
 def main(args: argparse.Namespace) -> int:
-    jobs: list[Job] = [
-        (s, iv, args.start, args.end, args.data_dir) for s in args.symbols for iv in INTERVALS
-    ]
+    # One job per contiguous data segment (listing/delisting, exchange outages) of each
+    # (symbol, interval); both the 1m price path and the strategy candles must exist.
+    store = HistoricalStore(args.data_dir)
+    jobs: list[Job] = []
+    for s in args.symbols:
+        minute = set(available_segments(store, DataKind.KLINES, s, args.start, args.end))
+        for iv in args.intervals:
+            for seg in available_segments(store, DataKind.KLINES, s, args.start, args.end, iv):
+                if seg not in minute:
+                    print(f"  WARNING {s} {iv} segment {seg} not matched by 1m data: skipped")
+                    continue
+                if (seg[1] - seg[0]).days < 30:
+                    print(f"  WARNING {s} {iv} segment {seg} shorter than 30 days: skipped")
+                    continue
+                jobs.append((s, iv, seg[0], seg[1], args.data_dir))
+    print(f"{len(jobs)} jobs")
     args.cache_dir.mkdir(parents=True, exist_ok=True)
     trades: dict[str, list[TradeRecord]] = {}
     t0 = time.perf_counter()
@@ -129,6 +144,9 @@ def main(args: argparse.Namespace) -> int:
     real, _ = split_controls(trades)
     wf = walk_forward(real, make_folds(args.start, args.end), min_train_trades=30)
     print(f"\nOOS: {fmt_stats(wf.oos)}  (trades | mean R | total R | win | PF | maxDD R | t)")
+    criteria = evaluate_criteria(wf)
+    for c in criteria:
+        print(f"  [{'OK' if c.passed else 'FAIL'}] {c.name}: {c.observed}")
     meta = [
         f"Generado {datetime.now(UTC):%Y-%m-%d %H:%M} UTC por `scripts/research_trend_breakout.py` "
         f"({(time.perf_counter() - t0) / 60:.1f} min). Datos {args.start}..{args.end}, "
@@ -136,9 +154,7 @@ def main(args: argparse.Namespace) -> int:
     ]
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(
-        walk_forward_report(
-            "T20 — TREND_BREAKOUT: walk-forward (pre-registrado en ADR-0010)", meta, trades, wf
-        ),
+        walk_forward_report(args.title, meta, trades, wf, criteria),
         encoding="utf-8",
     )
     print(f"report: {args.report}")
@@ -146,6 +162,7 @@ def main(args: argparse.Namespace) -> int:
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]  # Windows consoles: cp1252
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -156,6 +173,12 @@ if __name__ == "__main__":
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--cache-dir", type=Path, default=Path("data/research/t20"))
     parser.add_argument("--fresh", action="store_true")
+    parser.add_argument(
+        "--intervals", nargs="+", type=KlineInterval, default=[KlineInterval.M15, KlineInterval.H1]
+    )
+    parser.add_argument(
+        "--title", default="T20 — TREND_BREAKOUT: walk-forward (pre-registrado en ADR-0010)"
+    )
     default_report = Path("reports/2026-10-14-t20-trend-breakout-walk-forward.md")
     parser.add_argument("--report", type=Path, default=default_report)
     sys.exit(main(parser.parse_args()))
