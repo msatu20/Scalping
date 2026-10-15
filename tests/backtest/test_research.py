@@ -57,3 +57,18 @@ def test_evaluate_criteria() -> None:
     assert crit["Años positivos ≥ 70%"].observed == "2/2"
     assert crit["Activos positivos ≥ 60%"].passed
     assert "NO APROBADA" in "\n".join(criteria_table(list(crit.values())))
+
+
+def test_evaluate_fixed_rule_and_report() -> None:
+    from scalping.backtest.research import evaluate_fixed_rule, fixed_rule_report
+
+    recs = ([rec(date(2024, 5, 1), 1.0, s) for s in ("A", "B", "C")] * 40
+            + [rec(date(2025, 5, 1), -1.0, s) for s in ("A", "B", "C")] * 20)  # fmt: skip
+    crit = {c.name: c for c in evaluate_fixed_rule(recs)}
+    assert crit["Mean R > 0 y t ≥ 2"].passed and crit["Profit factor ≥ 1,2"].passed
+    assert (
+        crit["Años positivos ≥ 70%"].observed == "1/2" and not crit["Años positivos ≥ 70%"].passed
+    )
+    assert crit["≥ 200 trades"].observed == "180" and not crit["≥ 200 trades"].passed
+    text = fixed_rule_report("T", ["m"], recs, recs, list(crit.values()))
+    assert "NO APROBADA" in text and "### Por activo" in text and "### Por año" in text

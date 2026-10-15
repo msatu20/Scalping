@@ -172,3 +172,55 @@ def criteria_table(criteria: Sequence[Criterion]) -> list[str]:
     ]
     lines += [f"| {c.name} | {c.observed} | {'✅' if c.passed else '❌'} |" for c in criteria]
     return [*lines, "", f"Veredicto: {verdict}", ""]
+
+
+def evaluate_fixed_rule(
+    records: Sequence[TradeRecord],
+    min_trades: int = 200,
+    min_group_trades: int = 30,
+    min_pf: float = 1.2,
+    year_share: float = 0.7,
+    symbol_share: float = 0.6,
+) -> list[Criterion]:
+    """Pre-registered criteria for a single fixed rule (ADR-0012): no selection, no folds."""
+    s = Stats.of(sorted(records, key=lambda r: r.entry_time))
+
+    def big(key: str) -> dict[str, Stats]:
+        return {k: v for k, v in breakdown(records, key).items() if v.trades >= min_group_trades}
+
+    years, symbols = big("year"), big("symbol")
+    pos_years = sum(1 for v in years.values() if v.mean_r > 0)
+    pos_symbols = sum(1 for v in symbols.values() if v.mean_r > 0)
+    return [
+        Criterion("Mean R > 0 y t ≥ 2", f"{s.mean_r:+.3f} R, t {s.t_stat:+.2f}",
+                  s.mean_r > 0 and s.t_stat >= 2),
+        Criterion(f"Profit factor ≥ {min_pf:.1f}".replace(".", ","), f"{s.profit_factor:.2f}",
+                  s.profit_factor >= min_pf),
+        Criterion(f"Años positivos ≥ {year_share:.0%}", f"{pos_years}/{len(years)}",
+                  bool(years) and pos_years / len(years) >= year_share),
+        Criterion(f"Activos positivos ≥ {symbol_share:.0%}", f"{pos_symbols}/{len(symbols)}",
+                  bool(symbols) and pos_symbols / len(symbols) >= symbol_share),
+        Criterion(f"≥ {min_trades} trades", str(s.trades), s.trades >= min_trades),
+    ]  # fmt: skip
+
+
+def fixed_rule_report(
+    title: str,
+    meta: Sequence[str],
+    records: Sequence[TradeRecord],
+    control: Sequence[TradeRecord],
+    criteria: Sequence[Criterion],
+) -> str:
+    ordered = sorted(records, key=lambda r: r.entry_time)
+    control_stats = Stats.of(sorted(control, key=lambda r: r.entry_time))
+    lines = [f"# {title}", "", *meta, "", "## Resultado", "",
+             f"| | {STATS_HEADER} |", f"|---|{'---|' * 7}",
+             f"| **Regla fija (todos los activos)** | {fmt_stats(Stats.of(ordered))} |",
+             f"| Control sin costes | {fmt_stats(control_stats)} |",
+             "", *criteria_table(criteria)]  # fmt: skip
+    for key, label in (("symbol", "activo"), ("year", "año")):
+        lines += [f"### Por {label}", "", f"| {label} | {STATS_HEADER} |", f"|---|{'---|' * 7}"]
+        lines += [f"| {k} | {fmt_stats(v)} |" for k, v in breakdown(ordered, key).items()]
+        lines.append("")
+    lines.append("R = PnL neto / riesgo planificado (0,5 % de 10 000 USDT, sin capitalizar).")
+    return "\n".join([*lines, ""])

@@ -26,4 +26,6 @@
 | K23 | BT | Sesgo de supervivencia en el universo (activos elegidos con información de hoy); EOS deslistado incluido para mitigar | Confirmaciones con activos no usados; declarar universo antes de mirar resultados |
 | K24 | BT/STR | Re-selección frecuente de variantes con ventanas cortas persigue ruido (T21: OOS 0 vs regla fija +0,075 R in-sample) | Preferir reglas fijas pre-declaradas; si se selecciona, ventanas de train largas y pocas variantes |
 | K25 | BT | Anomalías en datos de Binance (taker_buy > volumen en 2 velas 1m) | `repair_klines` en la ingesta, con log; validaciones del core las detectan |
+| K26 | RSK | Drawdown de cartera: T23 max DD agregado 114 R = 57 % del capital con 0,5 %/trade en 14 activos simultáneos | Sizing por cartera (riesgo total abierto acotado, p. ej. 0,1–0,2 %/trade) antes de paper/live |
+| K27 | STR | PF estructuralmente ≈ 1,1–1,15 para objetivo 2R con win ≈ 37 % → criterio PF ≥ 1,2 difícil de cumplir aunque la expectativa sea positiva | Mantener el criterio pre-registrado; evaluar forward en paper |
 | K15 | MD/EXE | Latencia geográfica alta (~365 ms media, 831 ms máx. desde el equipo local) → señales tardías, libro intermitentemente no operable | T11: medir desde VPS en Tokio (ap-northeast-1); ajustar `max_latency_ms`; no operar live desde el equipo local sin medirlo |

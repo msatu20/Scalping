@@ -30,6 +30,8 @@
 | — | 2026-10-14 | **TREND_BREAKOUT no aprobada** (OOS +0,023 R, t +0,41; PF 1,03) pero primera familia con ventaja bruta (16/16 > 0 sin costes); horizonte 1h+ = dirección prometedora, falta potencia estadística | Aceptada |
 | ADR-0011 | 2026-10-15 | TREND_BREAKOUT multi-activo 1h–4h 2020–2026: **NO APROBADA** (OOS walk-forward +0,001 R, t +0,04); la re-selección mensual persigue ruido; regla fija 4h-n20-k2-r2 = hipótesis a confirmar fuera de muestra | Aceptada |
 | — | 2026-10-15 | Datos: anomalías upstream (taker > volumen) se recortan y se registran al ingerir (`repair_klines`) | Aceptada |
+| ADR-0012 | 2026-10-15 | Pre-registro T23: confirmar regla fija 4h-n20-k2-r2 en 14 activos no examinados (10 por volumen + 4 deslistados por muestreo con semilla); criterios del usuario: PF ≥ 1,2 (sin relajar), t ≥ 2, años ≥ 70 %, activos ≥ 60 % | Aceptada |
+| ADR-0012 | 2026-10-15 | **T23 NO APROBADA** por PF 1,13 < 1,2 (criterio no relajado); efecto de la regla fija 4h-n20-k2-r2 replicado fuera de muestra (+0,083 R, t +3,84, 13/14 activos) → siguiente: paper trading forward con la regla sin cambios (decisión del usuario) | Aceptada |
 | ADR-0006 | 2026-10-14 | Históricos de data.binance.vision → Parquet diario zstd; float64 round-trip, ms int64; checksum obligatorio; días ausentes = error | Aceptada |
 
 Pendientes de decidir: User Data Stream (ccxt.pro vs WS nativo) · almacenamiento de históricos · apalancamiento máx. · despliegue (VPS/región).

@@ -22,7 +22,8 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | `src/scalping/strategy/signals/stop_hunt.py` | ✅ | `StopHuntReboundStrategy` (T18, ADR-0009): barrido de nivel + estallido de agresión + recuperación rápida, tick a tick | strategy | STR |
 | `src/scalping/strategy/signals/trend_breakout.py` | ✅ | `TrendBreakoutStrategy` (ADR-0010): ruptura de canal N a favor de EMA200, stop k×ATR | strategy | STR |
 | `src/scalping/strategy/indicators/atr.py` | ✅ | ATR Wilder batch + incremental bit-idénticos | strategy | STR |
-| `src/scalping/backtest/research.py` | ✅ | Helpers de informes walk-forward (controles, desglose por símbolo/año) + `evaluate_criteria` (veredicto mecánico pre-registrado, ADR-0011) | backtesting | BT |
+| `src/scalping/backtest/research.py` | ✅ | Helpers de informes walk-forward (controles, desglose por símbolo/año) + `evaluate_criteria` / `evaluate_fixed_rule` (veredicto mecánico pre-registrado, ADR-0011/0012), `fixed_rule_report` | backtesting | BT |
+| `scripts/confirm_fixed_rule.py` | ✅ | T23: confirmación de una regla fija (sin selección) + control sin costes + criterios ADR-0012 | backtesting | BT |
 | `scripts/research_trend_breakout.py`, `scripts/resample_klines.py` | ✅ | Investigación T20; velas 15m/1h desde 1m (validado exacto vs Binance 5m) | backtesting | BT |
 | `src/scalping/strategy/orderflow.py` | ✅ | `AggressionTracker`: notional agresivo por lado en ventana vs media de la última hora, O(1)/trade | strategy | STR |
 | `src/scalping/strategy/signals/mean_reversion.py` | ✅ | `MeanReversionStrategy` (RSI+BB, setup → re-entrada, modos CLOSE/TICK, filtros fees y R:R) | strategy | STR |
