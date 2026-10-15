@@ -5,6 +5,7 @@ from scalping.strategy.signals.mean_reversion import (
     TriggerMode,
 )
 from scalping.strategy.signals.stop_hunt import StopHuntParams, StopHuntReboundStrategy
+from scalping.strategy.signals.trend_breakout import TrendBreakoutParams, TrendBreakoutStrategy
 
 __all__ = [
     "MeanReversionParams",
@@ -13,5 +14,7 @@ __all__ = [
     "SignalHandler",
     "StopHuntParams",
     "StopHuntReboundStrategy",
+    "TrendBreakoutParams",
+    "TrendBreakoutStrategy",
     "TriggerMode",
 ]

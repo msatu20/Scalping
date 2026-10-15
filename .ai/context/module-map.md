@@ -20,10 +20,17 @@ Leyenda: ✅ implementado · 🧱 esqueleto (`__init__.py` vacío) · 📐 PROPU
 | `src/scalping/strategy/patterns/` | 🧱 | Patrones de velas, detección de barridos de stops | strategy | STR |
 | `src/scalping/strategy/signals/base.py` | ✅ | Protocol `SignalGenerator.on_event(event) -> Signal \| None` | strategy | STR |
 | `src/scalping/strategy/signals/stop_hunt.py` | ✅ | `StopHuntReboundStrategy` (T18, ADR-0009): barrido de nivel + estallido de agresión + recuperación rápida, tick a tick | strategy | STR |
+| `src/scalping/strategy/signals/trend_breakout.py` | ✅ | `TrendBreakoutStrategy` (ADR-0010): ruptura de canal N a favor de EMA200, stop k×ATR | strategy | STR |
+| `src/scalping/strategy/indicators/atr.py` | ✅ | ATR Wilder batch + incremental bit-idénticos | strategy | STR |
+| `src/scalping/backtest/research.py` | ✅ | Helpers de informes walk-forward (controles, desglose por símbolo/año) | backtesting | BT |
+| `scripts/research_trend_breakout.py`, `scripts/resample_klines.py` | ✅ | Investigación T20; velas 15m/1h desde 1m (validado exacto vs Binance 5m) | backtesting | BT |
 | `src/scalping/strategy/orderflow.py` | ✅ | `AggressionTracker`: notional agresivo por lado en ventana vs media de la última hora, O(1)/trade | strategy | STR |
 | `src/scalping/strategy/signals/mean_reversion.py` | ✅ | `MeanReversionStrategy` (RSI+BB, setup → re-entrada, modos CLOSE/TICK, filtros fees y R:R) | strategy | STR |
 | `scripts/run_signals.py` | ✅ | Señales sobre replay + diagnóstico preliminar de primer toque | strategy | STR |
-| `src/scalping/execution/` | 🧱 | ccxt/REST firmado, órdenes, user data stream, rate limiter, conversión de símbolos ccxt | execution-risk | EXE |
+| `src/scalping/execution/symbol_filters.py` | ✅ | T15: `SymbolFilters` desde exchangeInfo, `apply_filters` (redondeo al lado seguro, minNotional) | execution-risk | EXE |
+| `src/scalping/execution/rate_limit.py` | ✅ | T9: `RateLimiter` (peso/min, cabecera, 429 pausa, 418 bloqueo) + `guarded_get_json` | execution-risk | EXE |
+| `src/scalping/core/broker.py` | ✅ | T17: Protocol `Broker` (submit/on_event/is_busy/has_position/close_all) | orchestrator | CORE |
+| `src/scalping/execution/` (broker real ccxt, user data stream) | 📐 | Solo para live (requiere aprobación explícita) | execution-risk | EXE |
 | `src/scalping/risk/` | 🧱 | Tamaño, SL/TP, apalancamiento, límites, kill-switch | execution-risk | RSK |
 | `src/scalping/config/settings.py` | ✅ | `Settings` (pydantic-settings, inmutable), `TradingMode`, `HARD_MAX_LEVERAGE`=10, URLs por modo, guardas paper/testnet/live | execution-risk | CFG |
 | `src/scalping/backtest/store.py` | ✅ | `HistoricalStore` (Parquet diario, escritura atómica, `load` falla si faltan días), `find_kline_gaps` | backtesting | BT |

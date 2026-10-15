@@ -29,7 +29,9 @@ def report(feed: MarketDataFeed, elapsed: int) -> None:
     st = feed.stats
     print(
         f"[{elapsed:>4}s] events={dict(st.events)} deltas={dict(st.delta_results)} "
-        f"latency avg={st.avg_latency_ms:.0f}ms max={st.max_latency_ms}ms "
+        f"latency avg={st.avg_latency_ms:.0f} p50={st.latency_percentile(50):.0f} "
+        f"p90={st.latency_percentile(90):.0f} p99={st.latency_percentile(99):.0f} "
+        f"max={st.max_latency_ms}ms "
         f"queue_max={st.max_queue_size} parse_errors={feed.parse_errors} "
         f"reconnects={feed.reconnects} snapshots={feed.manager.snapshot_requests} | {books}",
         flush=True,

@@ -35,6 +35,7 @@ from enum import StrEnum
 
 from scalping.backtest.funding import FundingSchedule
 from scalping.config.settings import Settings
+from scalping.core.broker import Broker
 from scalping.core.models import (
     AggregatedTrade,
     ExecutionStyle,
@@ -141,6 +142,8 @@ class _Position:
 
 
 class SimBroker:
+    """Implements ``core.broker.Broker`` (backtest and paper trading)."""
+
     def __init__(
         self,
         costs: CostModel | None = None,
@@ -345,3 +348,8 @@ class SimBroker:
             pos.funding -= direction * pos.entry.qty * mark * event.rate
             self.stats["funding_settlements"] += 1
         pos.funding_checked_to = up_to
+
+
+def _conforms_to_broker(broker: SimBroker) -> Broker:
+    """Static check (mypy): SimBroker satisfies the core Broker protocol."""
+    return broker

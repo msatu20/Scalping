@@ -45,7 +45,7 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 ### T9 — Gestor central de rate limits / ban (418)
 - **Área/chunk:** EXE/MD · **Prioridad:** alta · **Origen:** change-log T6
 - **Descripción:** componente compartido que lea `X-MBX-USED-WEIGHT-1M`, respete `Retry-After` y, ante 418, detenga todas las peticiones REST y pause la operativa. Usarlo en `rest_snapshot` y en `execution`.
-- **Estado:** pendiente
+- **Estado:** hecho (2026-10-14) — `execution/rate_limit.py` (`RateLimiter`, `guarded_get_json`); integrado en snapshots REST y `fetch_symbol_filters`
 
 ### T10 — Runner de market data + prueba de humo
 - **Área/chunk:** MD · **Prioridad:** alta · **Origen:** change-log T6
@@ -55,7 +55,7 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 ### T11 — Latencia: medir desde VPS cercano a Binance
 - **Área/chunk:** MD/EXE · **Prioridad:** alta (antes de live) · **Origen:** smoke 2026-10-14 (K15)
 - **Descripción:** latencia event→recepción desde el equipo local: media ~365 ms, máx. 831 ms. Ejecutar `scripts/smoke_market_data.py --seconds 600` desde un VPS en AWS ap-northeast-1 (Tokio) y comparar; fijar `ResyncPolicy.max_latency_ms` según la distribución (p99).
-- **Estado:** pendiente
+- **Estado:** bloqueada por el usuario (requiere contratar VPS en AWS ap-northeast-1). Listo: `smoke_market_data.py` reporta p50/p90/p99. Referencias: casa ~500 ms; trabajo p50 223 / p99 331 ms
 
 ### T12 — Replay de backtest (Parquet → eventos core)
 - **Área/chunk:** BT · **Prioridad:** alta · **Origen:** change-log T5
@@ -75,7 +75,7 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 ### T15 — Redondeo a filtros del símbolo (tickSize / stepSize / minNotional)
 - **Área/chunk:** EXE · **Prioridad:** alta (antes de órdenes) · **Origen:** change-log señal MEAN_REVERSION
 - **Descripción:** cargar `exchangeInfo` de USDⓈ-M y redondear precios de `OrderIntent` a `tickSize` (SL/TP hacia el lado seguro) y cantidades a `stepSize`; validar `minNotional`. Las `Signal` llevan precios sin redondear (p. ej. `81778.19045000001`).
-- **Estado:** pendiente
+- **Estado:** hecho (2026-10-14) — `execution/symbol_filters.py` (`SymbolFilters`, `apply_filters`, `fetch_symbol_filters`), fixture real de exchangeInfo
 
 ### T16 — Investigación de MEAN_REVERSION con walk-forward
 - **Área/chunk:** STR/BT · **Prioridad:** media · **Origen:** K18
@@ -85,7 +85,7 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 ### T17 — `Broker` Protocol en core
 - **Área/chunk:** CORE/EXE · **Prioridad:** media · **Origen:** ADR-0007 (resto de T2)
 - **Descripción:** Protocol común (`submit`, `on_event`/actualización de estado, `is_busy`, posiciones, cierre) que implementen `SimBroker` y el futuro broker real ccxt, para que el runner de estrategia sea idéntico en backtest, paper y live.
-- **Estado:** pendiente
+- **Estado:** hecho (2026-10-14) — `core/broker.py` (Protocol `Broker`); `SimBroker` lo cumple (chequeo estático + test). Paper trading = SimBroker + feed live
 
 ### T18 — Siguiente hipótesis de estrategia (información distinta a RSI/BB)
 - **Área/chunk:** STR/BT/MD · **Prioridad:** alta · **Origen:** T16
@@ -100,4 +100,14 @@ Deuda, bugs detectados y trabajo pendiente. Formato: `templates/task.md`. No arr
 ### T20 — Decidir dirección tras T16 + T18 (barrera de costes, K19)
 - **Área/chunk:** STR · **Prioridad:** alta · **Origen:** T18
 - **Descripción:** opciones: (a) camino 2 order-book imbalance con depth grabado (T19, semanas de datos); (b) subir horizonte (15m–4h, stops ≥ 100 bps → costes ≪ R); (c) reducir costes (tier VIP / BNB) y re-evaluar; (d) pausar investigación de señales y consolidar infraestructura (T15, T17, T9, T11).
+- **Estado:** hecho (2026-10-14) — infraestructura T9/T15/T17 lista; TREND_BREAKOUT no aprobada pero con ventaja bruta (ver informe T20)
+
+### T21 — Siguiente experimento con potencia estadística (horizonte 1h–4h)
+- **Área/chunk:** STR/BT · **Prioridad:** alta · **Origen:** T20, K21
+- **Descripción:** pre-registrar (nuevo ADR) un experimento de tendencia/momentum con más potencia: universo de ~10 perpetuos USDT-M líquidos, datos desde 2020 (klines 1m vía data.binance.vision + resample), intervalos 1h/4h, rejilla pequeña. Objetivo ≥ 4 000 trades OOS. Incluir estabilidad por año como criterio.
 - **Estado:** pendiente (decisión del usuario)
+
+### T22 — Paper trading runner (SimBroker + MarketDataFeed)
+- **Área/chunk:** EXE/STR · **Prioridad:** media · **Origen:** T17
+- **Descripción:** proceso desacoplado que conecte feed live → estrategia → `apply_filters` (T15) → `SimBroker` (Protocol `Broker`), con log de órdenes/PnL. Solo se activará con una estrategia que cumpla ADR-0008.
+- **Estado:** pendiente

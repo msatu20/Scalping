@@ -124,7 +124,7 @@ def test_invalid_frames_raise(raw: str) -> None:
 
 def test_unsupported_kline_interval_raises(binance_raw: Loader) -> None:
     msg = json.loads(binance_raw("kline_1m.json"))
-    msg["k"]["i"] = "1h"
+    msg["k"]["i"] = "4h"
     with pytest.raises(ParseError):
         parse_message(json.dumps(msg), RECV)
 

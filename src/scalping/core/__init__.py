@@ -1,3 +1,4 @@
+from scalping.core.broker import Broker
 from scalping.core.clock import Clock, FixedClock, SystemClock
 from scalping.core.feed import EventHandler, MarketFeed
 from scalping.core.models import (
@@ -18,6 +19,7 @@ from scalping.core.models import (
 
 __all__ = [
     "AggregatedTrade",
+    "Broker",
     "Clock",
     "EventHandler",
     "ExecutionStyle",

@@ -22,8 +22,6 @@ import pandas as pd
 
 from scalping.core.models import KlineInterval
 
-_INTERVAL_MS = {KlineInterval.M1: 60_000, KlineInterval.M3: 180_000, KlineInterval.M5: 300_000}
-
 
 class DataKind(StrEnum):
     KLINES = "klines"
@@ -93,8 +91,62 @@ def find_kline_gaps(klines: pd.DataFrame, interval: KlineInterval) -> pd.DataFra
 
     Returns ``open_time`` (last candle before the gap) and ``missing`` (candle count).
     """
-    step = _INTERVAL_MS[interval]
+    step = interval.ms
     diff = klines["open_time"].diff().shift(-1)
     gaps = klines.loc[diff > step, ["open_time"]].copy()
     gaps["missing"] = (diff[diff > step] // step - 1).astype("int64")
     return gaps.reset_index(drop=True)
+
+
+_SUM_COLUMNS = ("volume", "quote_volume", "count", "taker_buy_volume", "taker_buy_quote_volume")
+
+
+def resample_klines(klines: pd.DataFrame, target: KlineInterval) -> pd.DataFrame:
+    """Aggregate 1m klines into ``target`` candles (Binance definition: open of the first,
+    max high, min low, close of the last, summed volumes). Requires complete buckets."""
+    step = target.ms
+    bucket = klines["open_time"] // step * step
+    grouped = klines.groupby(bucket, sort=True)
+    sizes = grouped.size()
+    expected = step // KlineInterval.M1.ms
+    if (sizes != expected).any():
+        incomplete = sizes[sizes != expected].index.tolist()[:3]
+        raise ValueError(f"incomplete {target} buckets (first: {incomplete})")
+    out = pd.DataFrame(
+        {
+            "open_time": sizes.index.to_numpy(dtype="int64"),
+            "open": grouped["open"].first().to_numpy(),
+            "high": grouped["high"].max().to_numpy(),
+            "low": grouped["low"].min().to_numpy(),
+            "close": grouped["close"].last().to_numpy(),
+            "close_time": (sizes.index + step - 1).to_numpy(dtype="int64"),
+        }
+    )
+    for col in _SUM_COLUMNS:
+        if col in klines:
+            out[col] = grouped[col].sum().to_numpy()
+    # Column order as downloaded klines.
+    order = [
+        "open_time",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "close_time",
+        "quote_volume",
+        "count",
+        "taker_buy_volume",
+        "taker_buy_quote_volume",
+    ]
+    return out[[c for c in order if c in out]]
+
+
+def resample_day(store: HistoricalStore, symbol: str, day: date, target: KlineInterval) -> bool:
+    """Write ``target`` klines for ``day`` from stored 1m klines. False if already present."""
+    path = store.path(DataKind.KLINES, symbol, day, target)
+    if path.exists():
+        return False
+    minute = store.load(DataKind.KLINES, symbol, day, day, KlineInterval.M1)
+    store.write(resample_klines(minute, target), path)
+    return True

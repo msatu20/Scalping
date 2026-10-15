@@ -5,6 +5,7 @@
   uncommitted intra-candle value, ``None`` during warm-up. For live trading.
 """
 
+from scalping.strategy.indicators.atr import ATR, atr
 from scalping.strategy.indicators.bollinger import (
     BollingerArrays,
     BollingerBands,
@@ -15,12 +16,14 @@ from scalping.strategy.indicators.moving_average import EMA, SMA, ema, sma
 from scalping.strategy.indicators.rsi import RSI, rsi
 
 __all__ = [
+    "ATR",
     "EMA",
     "RSI",
     "SMA",
     "BollingerArrays",
     "BollingerBands",
     "BollingerValue",
+    "atr",
     "bollinger",
     "ema",
     "rsi",

@@ -24,6 +24,10 @@
 | — | 2026-10-14 | **Familia MEAN_REVERSION (RSI+BB) descartada**: OOS −0,185 R (t −7,9); sin costes ≈ 0 R → sin capacidad predictiva | Aceptada |
 | ADR-0009 | 2026-10-14 | **STOP_HUNT_REBOUND descartada**: OOS −0,363 R (t −24,5), 9/9 meses negativos; sin costes ≈ 0 R (taker) / −0,07 R (maker, selección adversa) | Aceptada |
 | — | 2026-10-14 | Evidencia acumulada (T16+T18): a 1–5 min en BTC/ETH los costes ≈ 0,3–0,4 R/trade con stops 25–40 bps; ninguna señal probada tiene ventaja bruta | Aceptada |
+| ADR-0010 | 2026-10-14 | Pre-registro TREND_BREAKOUT 15m–1h (36 meses, 16 variantes, walk-forward ADR-0008) | Aceptada |
+| — | 2026-10-14 | Velas 15m/1h se construyen desde 1m (`resample_klines`): OHLC/tiempos/count exactos vs Binance 5m en 12 meses × 2 símbolos | Aceptada |
+| — | 2026-10-14 | Paper trading = `SimBroker` (Protocol `Broker`) alimentado por `MarketDataFeed`; broker real solo con aprobación explícita | Aceptada |
+| — | 2026-10-14 | **TREND_BREAKOUT no aprobada** (OOS +0,023 R, t +0,41; PF 1,03) pero primera familia con ventaja bruta (16/16 > 0 sin costes); horizonte 1h+ = dirección prometedora, falta potencia estadística | Aceptada |
 | ADR-0006 | 2026-10-14 | Históricos de data.binance.vision → Parquet diario zstd; float64 round-trip, ms int64; checksum obligatorio; días ausentes = error | Aceptada |
 
 Pendientes de decidir: User Data Stream (ccxt.pro vs WS nativo) · almacenamiento de históricos · apalancamiento máx. · despliegue (VPS/región).

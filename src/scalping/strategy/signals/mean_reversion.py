@@ -41,7 +41,6 @@ from scalping.core.models import (
 from scalping.strategy.indicators import EMA, RSI, BollingerBands, BollingerValue
 from scalping.strategy.signals.base import SignalHandler
 
-_INTERVAL_MS = {KlineInterval.M1: 60_000, KlineInterval.M3: 180_000, KlineInterval.M5: 300_000}
 # RSI points beyond the threshold that count as "maximally extreme" for confidence.
 _RSI_SCORE_SPAN = 15.0
 
@@ -116,7 +115,7 @@ class MeanReversionStrategy:
         self.params = params or MeanReversionParams()
         self._clock = clock
         self._on_signal = on_signal
-        self._interval_ms = _INTERVAL_MS[self.params.interval]
+        self._interval_ms = self.params.interval.ms
         self._states = {
             s: _SymbolState(
                 s,

@@ -200,3 +200,21 @@ async def test_download_range_is_idempotent_and_resilient(
     assert hits[f"/klines/BTCUSDT/1m/BTCUSDT-1m-{D1}.zip"] == 1  # skipped on second run
     loaded = store.load(DataKind.KLINES, "BTCUSDT", D1, D2)
     assert len(loaded) == 4 and loaded["close"].iloc[0] == 83721.6
+
+
+def test_resample_klines_ohlc_and_completeness() -> None:
+    from scalping.backtest.store import resample_klines
+
+    minute = pd.DataFrame({
+        "open_time": [i * 60_000 for i in range(30)],
+        "open": [100.0 + i for i in range(30)], "high": [101.0 + i for i in range(30)],
+        "low": [99.0 + i for i in range(30)], "close": [100.5 + i for i in range(30)],
+        "volume": 1.0, "close_time": [i * 60_000 + 59_999 for i in range(30)],
+        "quote_volume": 100.0, "count": 2, "taker_buy_volume": 0.5, "taker_buy_quote_volume": 50.0,
+    })  # fmt: skip
+    out = resample_klines(minute, KlineInterval.M15)
+    assert out["open_time"].tolist() == [0, 900_000]
+    assert out.iloc[0][["open", "high", "low", "close"]].tolist() == [100.0, 115.0, 99.0, 114.5]
+    assert out.iloc[1]["close_time"] == 1_799_999 and out.iloc[1]["count"] == 30
+    with pytest.raises(ValueError, match="incomplete"):
+        resample_klines(minute.iloc[:20], KlineInterval.M15)

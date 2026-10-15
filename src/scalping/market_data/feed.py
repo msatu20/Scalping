@@ -14,7 +14,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from collections import Counter
+from collections import Counter, deque
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 
@@ -23,6 +23,7 @@ import aiohttp
 from scalping.config.settings import Settings
 from scalping.core.clock import Clock, SystemClock
 from scalping.core.models import KlineInterval, MarketEvent, OrderBookDelta
+from scalping.execution.rate_limit import RateLimiter
 from scalping.market_data.order_book import DeltaResult, OrderBookManager, ResyncPolicy
 from scalping.market_data.rest_snapshot import make_snapshot_fetcher
 from scalping.market_data.streams import StreamRoute, default_streams, routed_stream_urls
@@ -52,6 +53,15 @@ class FeedStats:
     latency_sum_ms: int = 0
     latency_samples: int = 0
     max_queue_size: int = 0
+    # Bounded sample for percentiles (T11): ~10 deltas/s/symbol -> hours of history.
+    latency_sample: deque[int] = field(default_factory=lambda: deque(maxlen=200_000))
+
+    def latency_percentile(self, q: float) -> float:
+        """Latency percentile (0-100) over the recent sample; 0 if empty."""
+        if not self.latency_sample:
+            return 0.0
+        ordered = sorted(self.latency_sample)
+        return float(ordered[min(len(ordered) - 1, int(q / 100 * len(ordered)))])
 
     @property
     def avg_latency_ms(self) -> float:
@@ -66,6 +76,7 @@ class FeedStats:
             self.max_latency_ms = max(self.max_latency_ms, latency)
             self.latency_sum_ms += latency
             self.latency_samples += 1
+            self.latency_sample.append(latency)
         self.max_queue_size = max(self.max_queue_size, queue_size)
 
 
@@ -99,6 +110,7 @@ class MarketDataFeed:
         self._stopped = asyncio.Event()
         self.manager: OrderBookManager | None = None
         self.clock: Clock | None = clock  # set to the server-aligned clock once running
+        self.rate_limiter: RateLimiter | None = None
         self.stats = FeedStats()
 
     @property
@@ -118,8 +130,13 @@ class MarketDataFeed:
         async with aiohttp.ClientSession() as session:
             clock = self._clock or await self._server_aligned_clock(session)
             self.clock = clock
+            self.rate_limiter = RateLimiter(clock)
             fetcher = make_snapshot_fetcher(
-                session, self._rest_base_url, clock, limit=self._snapshot_limit
+                session,
+                self._rest_base_url,
+                clock,
+                limit=self._snapshot_limit,
+                limiter=self.rate_limiter,
             )
             manager = OrderBookManager(self._settings.symbols, fetcher, self._resync_policy)
             self.manager = manager

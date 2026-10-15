@@ -112,3 +112,12 @@ async def test_feed_end_to_end(servers: dict[str, Any]) -> None:
         "/public/stream",
     ]
     assert feed.stats.events["OrderBookDelta"] == 2
+
+
+def test_feed_stats_latency_percentiles() -> None:
+    from scalping.market_data import FeedStats
+
+    stats = FeedStats()
+    assert stats.latency_percentile(99) == 0.0
+    stats.latency_sample.extend(range(1, 101))  # 1..100 ms
+    assert (stats.latency_percentile(50), stats.latency_percentile(99)) == (51.0, 100.0)

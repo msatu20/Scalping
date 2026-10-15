@@ -9,6 +9,7 @@ import aiohttp
 
 from scalping.core.clock import Clock
 from scalping.core.models import OrderBookSnapshot
+from scalping.execution.rate_limit import RateLimiter, depth_weight, guarded_get_json
 from scalping.market_data.order_book import SnapshotFetcher
 from scalping.market_data.parser import parse_depth_snapshot
 
@@ -22,6 +23,7 @@ def make_snapshot_fetcher(
     clock: Clock,
     limit: int = 1000,
     timeout_s: float = 5.0,
+    limiter: RateLimiter | None = None,
 ) -> SnapshotFetcher:
     if limit not in _VALID_LIMITS:
         raise ValueError(f"limit must be one of {_VALID_LIMITS}")
@@ -30,9 +32,14 @@ def make_snapshot_fetcher(
 
     async def fetch(symbol: str) -> OrderBookSnapshot:
         params = {"symbol": symbol, "limit": str(limit)}
-        async with session.get(url, params=params, timeout=timeout) as resp:
-            resp.raise_for_status()  # 429/418 -> ClientResponseError; manager backs off
-            data = await resp.json()
+        if limiter is not None:  # shared weight budget, 429/418 handling (T9)
+            data = await guarded_get_json(
+                session, limiter, url, depth_weight(limit), params, timeout_s
+            )
+        else:
+            async with session.get(url, params=params, timeout=timeout) as resp:
+                resp.raise_for_status()  # 429/418 -> ClientResponseError; manager backs off
+                data = await resp.json()
         return parse_depth_snapshot(symbol, data, clock.now_ms())
 
     return fetch

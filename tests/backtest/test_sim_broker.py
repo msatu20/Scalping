@@ -220,3 +220,10 @@ def test_klines_ignores_other_intervals() -> None:
                D(100), 1, D(0), True, 359_999, 359_999)  # fmt: skip
     feed(broker, m5)
     assert not broker.has_position(SYM)  # only the 1m price path fills orders
+
+
+def test_sim_broker_implements_broker_protocol() -> None:
+    from scalping.core import Broker
+
+    broker: Broker = SimBroker()
+    assert isinstance(broker, Broker)

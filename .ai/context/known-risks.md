@@ -4,7 +4,7 @@
 |---|---|---|---|
 | K1 | RSK | Posición sin SL por fallo al colocarlo | R1: verificar SL tras fill; si falla → cerrar posición |
 | K2 | EXE | Órdenes duplicadas por reintento tras timeout | `newClientOrderId` idempotente + consulta de estado (R8) |
-| K3 | EXE | Baneo IP por rate limits (429→418) | Rate limiter por headers; preferir WS |
+| K3 | EXE | Baneo IP por rate limits (429→418) | ✅ T9: `RateLimiter` compartido (presupuesto 80 %, 429 pausa global, 418 bloqueo + `is_banned`); preferir WS |
 | K4 | MD | Order book desincronizado (huecos de secuencia) | Validación `U/u`, resync automático |
 | K5 | MD | Datos obsoletos tras desconexión silenciosa | Timeout de inactividad + pausa de entradas (R5) |
 | K6 | EXE | `-1021` por desfase de reloj | Sync con `/time`, `recvWindow` |
@@ -19,6 +19,8 @@
 | K16 | BT/STR | Trade IDs de futuros no contiguos → `trade_count` (last−first+1) inexacto; volumen por minuto desde aggTrades difiere de klines en fronteras | Klines = verdad para volumen por vela; no usar `trade_count` como métrica exacta (ADR-0006) |
 | K18 | STR | **Cerrado (T16):** MEAN_REVERSION sin ventaja: 24 variantes negativas, OOS −0,185 R (t −7,9), sin costes ≈ 0 R. Riesgo genérico: sobreajustar al buscar variantes | Familia descartada; toda hipótesis nueva sigue ADR-0008 (pre-registro + walk-forward) |
 | K17 | BT | Sin depth histórico: estrategias basadas en order book (imbalance, `ORDER_FLOW_SQUEEZE`) no se pueden backtestear con data.binance.vision | Grabar el feed live (`/public` depth) a Parquet para backtests futuros; mientras, validar en paper |
-| K19 | STR | **Barrera de costes estructural** a 1–5 min: comisiones+slippage ≈ 0,3–0,4 R/trade (stops 25–40 bps). Dos familias sin ventaja bruta (T16, T18) | Exigir ventaja bruta ≫ 0,4 R o subir horizonte (stops ≥ 100 bps) / bajar costes (tier VIP, BNB) antes de nuevas hipótesis |
+| K19 | STR | **Barrera de costes estructural** a 1–5 min (T20: a 1 h baja a ≈ 0,07 R/trade): comisiones+slippage ≈ 0,3–0,4 R/trade (stops 25–40 bps). Dos familias sin ventaja bruta (T16, T18) | Exigir ventaja bruta ≫ 0,4 R o subir horizonte (stops ≥ 100 bps) / bajar costes (tier VIP, BNB) antes de nuevas hipótesis |
 | K20 | STR/BT | Entradas maker sufren selección adversa (T18: −0,07 R sin costes vs ≈ 0 taker) | No asumir que maker mejora una señal; medirlo siempre con control sin costes |
+| K21 | STR/BT | Potencia estadística insuficiente: efectos de ~+0,05 R requieren ~4 000 trades OOS para t ≥ 2; con 2 activos × 3 años a 1 h hay ~950 → riesgo de aceptar ruido o rechazar un efecto real | Ampliar activos (top líquidos USDT-M) y años (desde 2020) antes de decidir; no afinar parámetros sobre muestras pequeñas |
+| K22 | STR | Deterioro temporal del efecto tendencia (OOS 2024 +0,13 R → 2026 −0,08 R) | Evaluar por año/régimen en todo experimento; exigir estabilidad, no solo media |
 | K15 | MD/EXE | Latencia geográfica alta (~365 ms media, 831 ms máx. desde el equipo local) → señales tardías, libro intermitentemente no operable | T11: medir desde VPS en Tokio (ap-northeast-1); ajustar `max_latency_ms`; no operar live desde el equipo local sin medirlo |

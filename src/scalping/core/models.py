@@ -37,13 +37,23 @@ class StrategyType(StrEnum):
     MEAN_REVERSION = "MEAN_REVERSION"
     STOP_HUNT_REBOUND = "STOP_HUNT_REBOUND"
     ORDER_FLOW_SQUEEZE = "ORDER_FLOW_SQUEEZE"
+    TREND_BREAKOUT = "TREND_BREAKOUT"
 
 
 class KlineInterval(StrEnum):
     M1 = "1m"
     M3 = "3m"
     M5 = "5m"
+    M15 = "15m"
+    H1 = "1h"
+    # Keep members in ascending duration: code relies on the declaration order.
 
+    @property
+    def ms(self) -> int:
+        return _INTERVAL_MS[self.value]
+
+
+_INTERVAL_MS = {"1m": 60_000, "3m": 180_000, "5m": 300_000, "15m": 900_000, "1h": 3_600_000}
 
 # --------------------------------------------------------------------------- validation helpers
 
